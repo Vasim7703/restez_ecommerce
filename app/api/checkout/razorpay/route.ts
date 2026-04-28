@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { razorpay } from '@/lib/razorpay'
 import { requireAuth } from '@/lib/auth-guard'
 
+export const dynamic = 'force-dynamic'
+
 const MAX_ORDER_AMOUNT = 10_000_000 // ₹1,00,000 in paise (₹10 lakh max)
 const MIN_ORDER_AMOUNT = 100         // ₹1 minimum
 
