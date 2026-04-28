@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Don't index admin pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+
+Sitemap: https://www.restezartech.com/sitemap.xml

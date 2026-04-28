@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String   @default("")
+  password  String
+  role      String   @default("customer") // customer | admin
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  addresses Address[]
+  orders    Order[]
+}
+
+model OtpToken {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String
+  base_price       Int
+  category         String
+  collection       String
+  material         String
+  seating_capacity Int
+  style            String
+  dimensions       String   // Stringified JSON: { length: number, width: number, height: number }
+  fabric_options   String   // Stringified JSON: { standard: string[], premium: string[] }
+  premium_upcharge Int
+  images           String   // Stringified JSON: { main, front, angle_45... }
+  fabric_images    String   @default("{}") // Stringified JSON: { "Fabric Name": "imageUrl" }
+  in_stock         Boolean
+  featured         Boolean
+  reviews          Review[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Review {
+  id                String   @id @default(cuid())
+  product           Product  @relation(fields: [productId], references: [id])
+  productId         String
+  user_name         String
+  rating            Int
+  comment           String
+  date              String
+  verified_purchase Boolean
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  user       User?   @relation(fields: [userId], references: [id])
+  userId     String?
+  name       String
+  phone      String
+  street     String
+  city       String
+  state      String
+  pincode    String
+  is_default Boolean @default(false)
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  user           User?    @relation(fields: [userId], references: [id])
+  userId         String?
+  customer_name  String
+  email          String
+  phone          String
+  address        String   // Stringified JSON of delivery address
+  items          String   // Stringified JSON of cart items
+  subtotal       Int
+  discount       Int
+  total          Int
+  status         String   @default("pending") // pending | manufacturing | quality_check | shipped | delivered
+  payment_method String
+  payment_status String   @default("Pending") // Pending | Paid | COD
+  createdAt      DateTime @default(now())
+
+  updatedAt      DateTime @updatedAt
+}
+
+model SiteConfig {
+  key       String   @id
+  value     String   // Stringified JSON
+  updatedAt DateTime @updatedAt
+}

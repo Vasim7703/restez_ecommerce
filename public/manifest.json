@@ -1,0 +1,20 @@
+{
+  "name": "RESTEZ Worker Portal",
+  "short_name": "RESTEZ Scanner",
+  "start_url": "/worker/login",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#052e16",
+  "icons": [
+    {
+      "src": "/sofas/sofa_emerald_velvet.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/sofas/sofa_emerald_velvet.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
