@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -22,7 +22,8 @@ const getFabricImage = (product: { fabric_images: Record<string, string>; images
   return product.fabric_images?.[fabricName] || null
 }
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default function ProductDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = use(props.params)
   const router = useRouter()
   
   const [product, setProduct] = useState<Product | null>(null)

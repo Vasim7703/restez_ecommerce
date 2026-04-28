@@ -9,11 +9,14 @@ export default async function LabelPrintPage({
   params,
   searchParams
 }: { 
-  params: { id: string },
-  searchParams: { dest?: string }
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ dest?: string }>
 }) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+
   const order = await prisma.order.findUnique({
-    where: { id: params.id }
+    where: { id: resolvedParams.id }
   })
 
   if (!order) {
@@ -81,10 +84,10 @@ export default async function LabelPrintPage({
             <div key={index} className="bg-white shadow-2xl w-[4in] h-[3in] print:shadow-none print:w-[4in] print:h-[3in] print:m-0 overflow-hidden relative font-sans text-black border border-gray-200 print:border-none p-4 flex flex-col justify-between" style={{ pageBreakAfter: 'always' }}>
               
               {/* Dynamic Routing Destination Banner */}
-              {searchParams.dest && (
+              {resolvedSearchParams.dest && (
                 <div className="bg-black text-white text-center py-1.5 -mx-4 -mt-4 mb-2">
                   <h2 className="text-xl font-black uppercase tracking-widest leading-none">
-                    ROUTE TO: {searchParams.dest.replace(/_/g, ' ')}
+                    ROUTE TO: {resolvedSearchParams.dest.replace(/_/g, ' ')}
                   </h2>
                 </div>
               )}
