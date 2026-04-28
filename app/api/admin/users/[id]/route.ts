@@ -4,15 +4,16 @@ import { prisma } from '@/lib/prisma'
 // PATCH update user role
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const { role } = await request.json()
     if (!['customer', 'admin'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
     const updated = await prisma.user.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { role },
       select: { id: true, name: true, email: true, role: true }
     })

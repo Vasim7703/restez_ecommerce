@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    const buffer = new Uint8Array(bytes)
 
     // Ensure uploads directory exists
     const uploadDir = path.join(process.cwd(), 'public', 'uploads')

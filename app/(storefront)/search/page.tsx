@@ -4,11 +4,11 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Star, Filter, SlidersHorizontal, Search } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Product } from '@/lib/supabase'
 import { formatPrice } from '@/lib/utils'
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
 
@@ -243,5 +243,13 @@ export default function SearchPage() {
         
       </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">Loading search...</div>}>
+      <SearchPageContent />
+    </Suspense>
   )
 }

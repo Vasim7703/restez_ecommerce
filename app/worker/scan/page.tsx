@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, AlertTriangle, LogOut } from 'lucide-react'
 
 import { Scanner } from '@yudiel/react-qr-scanner'
 
-export default function WorkerScan() {
+function WorkerScanContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [department, setDepartment] = useState<string | null>(null)
@@ -242,5 +242,13 @@ export default function WorkerScan() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function WorkerScan() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">Loading...</div>}>
+      <WorkerScanContent />
+    </Suspense>
   )
 }
