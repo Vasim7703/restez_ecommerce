@@ -35,8 +35,16 @@ const securityHeaders = [
 
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'lh3.googleusercontent.com'],
-    // Removed 'placeholder.com' — unverified third party
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
   },
   async headers() {
     return [
