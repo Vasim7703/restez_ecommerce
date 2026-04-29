@@ -123,7 +123,7 @@ export default async function LabelPrintPage({
                       )}
                       {parsedDims && (
                         <span className="font-bold border border-black text-black px-1 py-0.5 rounded-sm uppercase text-[10px]">
-                          DIM: {parsedDims.length}"L x {parsedDims.width}"W x {parsedDims.height}"H
+                          DIM: {parsedDims.length}&quot;L x {parsedDims.width}&quot;W x {parsedDims.height}&quot;H
                         </span>
                       )}
                       {item.color && (

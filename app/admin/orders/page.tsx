@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Eye, X, MapPin, CreditCard, Package } from 'lucide-react'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 
 export default function AdminOrdersPage() {
@@ -333,7 +334,7 @@ export default function AdminOrdersPage() {
                         <div className="flex space-x-4">
                           <div className="w-20 h-20 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
                             {item.product?.images?.main ? (
-                              <img src={item.product.images.main} alt={item.product.name} className="w-full h-full object-cover" />
+                              <Image src={item.product.images.main} alt={item.product.name} fill className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs text-center p-2">No Image</div>
                             )}
