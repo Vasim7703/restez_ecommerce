@@ -98,7 +98,7 @@ export default function ProductReviews({ product }: { product: Product }) {
             <div className="pt-6 border-t border-gray-100">
               <h3 className="font-montserrat font-bold text-charcoal mb-2">Share your thoughts</h3>
               <p className="text-sm text-gray-500 mb-4 line-clamp-2 gap-2">
-                If you've purchased this item, we'd love to hear about your experience.
+                If you&apos;ve purchased this item, we&apos;d love to hear about your experience.
               </p>
               <button 
                 onClick={() => setShowReviewForm(!showReviewForm)}

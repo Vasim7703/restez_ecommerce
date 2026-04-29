@@ -83,7 +83,7 @@ export default function WillItFitModal({ isOpen, onClose, productDimensions, pro
             <div className="mt-6 p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded flex gap-3">
               <Info className="w-6 h-6 flex-shrink-0 text-yellow-600" />
               <div>
-                <p className="font-semibold font-playfair text-lg">It's a tight squeeze</p>
+                <p className="font-semibold font-playfair text-lg">It&apos;s a tight squeeze</p>
                 <p className="text-sm font-montserrat mt-1">It might fit through diagonally or with minor maneuvering. Our delivery team will assess upon arrival.</p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function WillItFitModal({ isOpen, onClose, productDimensions, pro
             <div className="mt-6 p-4 bg-red-50 text-red-800 border border-red-200 rounded flex gap-3">
               <AlertTriangle className="w-6 h-6 flex-shrink-0 text-red-600" />
               <div>
-                <p className="font-semibold font-playfair text-lg">Warning: Likely Won't Fit</p>
+                <p className="font-semibold font-playfair text-lg">Warning: Likely Won&apos;t Fit</p>
                 <p className="text-sm font-montserrat mt-1">The dimensions suggest this may not pass through comfortably. Consider requesting a site survey before ordering.</p>
               </div>
             </div>

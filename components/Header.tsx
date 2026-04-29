@@ -149,7 +149,7 @@ export default function Header() {
                           onClick={handleSearchSubmit}
                           className="w-full text-center px-4 py-3 border-t border-gray-50 text-sm font-montserrat font-semibold text-emerald hover:bg-emerald/5 transition-colors"
                         >
-                          See all results for "{searchQuery}"
+                          See all results for &quot;{searchQuery}&quot;
                         </button>
                       </div>
                     ) : (
