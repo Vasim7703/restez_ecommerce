@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -53,7 +54,7 @@ export default function Header() {
             <button className="p-2 hover:bg-gold/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-charcoal" />
             </button>
-            
+
             <Link
               href="/admin"
               className="hidden md:block p-2 hover:bg-gold/10 rounded-full transition-colors"

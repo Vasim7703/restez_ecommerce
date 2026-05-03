@@ -26,13 +26,22 @@ export default function Header() {
 
   useEffect(() => { 
     setMounted(true) 
-    fetch('/api/products').then(res => res.json()).then(setProducts).catch(console.error)
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setProducts(data)
+        } else {
+          console.error('Expected products array, got:', data)
+        }
+      })
+      .catch(console.error)
   }, [])
 
-  const searchResults = products.filter(p => 
+  const searchResults = Array.isArray(products) ? products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
-  ).slice(0, 4)
+  ).slice(0, 4) : []
 
   // Close menus on outside click
   useEffect(() => {

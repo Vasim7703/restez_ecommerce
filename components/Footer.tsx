@@ -33,13 +33,19 @@ export default function Footer() {
               Quick Links
             </h4>
             <ul className="space-y-2">
-              {['Home', 'Collections', 'About Us', 'Contact', 'FAQs'].map((item) => (
-                <li key={item}>
+              {[
+                { name: 'Home', href: '/' },
+                { name: 'Collections', href: '/products' },
+                { name: 'About Us', href: '/about' },
+                { name: 'Contact', href: '/contact' },
+                { name: 'FAQs', href: '#' }
+              ].map((link) => (
+                <li key={link.name}>
                   <Link
-                    href={`/${item.toLowerCase().replace(' ', '-')}`}
+                    href={link.href}
                     className="text-sm text-white/80 hover:text-gold transition-colors duration-300 font-montserrat"
                   >
-                    {item}
+                    {link.name}
                   </Link>
                 </li>
               ))}

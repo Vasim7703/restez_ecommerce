@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -22,8 +22,7 @@ const getFabricImage = (product: { fabric_images: Record<string, string>; images
   return product.fabric_images?.[fabricName] || null
 }
 
-export default function ProductDetailPage(props: { params: Promise<{ slug: string }> }) {
-  const params = use(props.params)
+export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const router = useRouter()
   
   const [product, setProduct] = useState<Product | null>(null)
@@ -59,11 +58,11 @@ export default function ProductDetailPage(props: { params: Promise<{ slug: strin
     }
   })
 
-  // Fetch product data
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
-      .then((data: Product[]) => {
+      .then((data) => {
+        if (!Array.isArray(data)) return;
         const found = data.find(p => p.slug === params.slug)
         if (found) {
           setProduct(found)

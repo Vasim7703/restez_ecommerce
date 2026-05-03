@@ -103,17 +103,17 @@ export default function ProductsPage() {
   }, [])
 
   // Filter products
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = Array.isArray(products) ? products.filter((product) => {
     const priceMatch = product.base_price >= priceRange[0] && product.base_price <= priceRange[1]
     const materialMatch = materials.length === 0 || materials.includes(product.material)
     const seatingMatch = seatingCapacity.length === 0 || seatingCapacity.includes(product.seating_capacity)
     const styleMatch = styles.length === 0 || styles.includes(product.style)
     const categoryMatch = activeCategory === 'All' || product.category === activeCategory
     return priceMatch && materialMatch && seatingMatch && styleMatch && categoryMatch
-  })
+  }) : []
 
   // Unique categories from all fetched products
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category))).sort()]
+  const categories = ['All', ...Array.from(new Set(Array.isArray(products) ? products.map(p => p.category) : [])).sort()]
 
   const groupedProducts = filteredProducts.reduce((acc, product) => {
     const key = product.collection || 'Other'

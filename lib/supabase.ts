@@ -1,11 +1,45 @@
 import { createClient } from '@supabase/supabase-js'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Browser / universal Supabase client
+// Safe to import in both client and server components.
+// Reads NEXT_PUBLIC_ vars which are embedded at build time.
+// ─────────────────────────────────────────────────────────────────────────────
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Server-side Supabase client factory (using @supabase/ssr)
+//
+// Usage (in Server Components or API routes):
+//   import { createServerSupabaseClient } from '@/lib/supabase'
+//   const client = createServerSupabaseClient()
+//   const { data } = await client.from('products').select('*')
+//
+// This client uses the anon key with no cookie context, suitable for
+// read-only public data or queries protected by RLS via service role.
+// For user-authenticated server requests, pass the user's cookies via
+// @supabase/ssr's createServerClient with cookie helpers.
+// ─────────────────────────────────────────────────────────────────────────────
+export function createServerSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error(
+      'Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.'
+    )
+  }
+
+  return createClient(url, key)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Database types
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface Product {
   id: string
   name: string

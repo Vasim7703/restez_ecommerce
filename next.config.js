@@ -15,16 +15,17 @@ const securityHeaders = [
   },
   // Strict Transport Security (HTTPS only) — uncomment in production
   // { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-  // Content Security Policy
   {
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://ajax.googleapis.com blob:",
+      "script-src-elem 'self' 'unsafe-inline' https://checkout.razorpay.com https://ajax.googleapis.com blob:",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com",
-      "connect-src 'self' https://api.razorpay.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://*.supabase.co",
+      "connect-src 'self' https://api.razorpay.com https://*.supabase.co wss://*.supabase.co",
       "frame-src https://api.razorpay.com https://checkout.razorpay.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -43,6 +44,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+      },
+      // Supabase Storage — covers all project buckets
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
       },
     ],
   },

@@ -49,6 +49,6 @@ export async function PATCH(request: Request) {
     })
   } catch (err: any) {
     console.error('Profile update error:', err)
-    return NextResponse.json({ error: err.message || 'Update failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Profile update failed. Please try again.' }, { status: 500 })
   }
 }
