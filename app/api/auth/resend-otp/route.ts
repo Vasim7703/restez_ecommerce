@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function POST(request: Request) {
   try {
@@ -9,38 +14,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    if (user.verified) {
-      return NextResponse.json({ error: 'Account is already verified' }, { status: 400 })
-    }
-
-    // Invalidate old OTPs for this email
-    await prisma.otpToken.updateMany({
-      where: { email, used: false },
-      data: { used: true }
+    // ── Pattern: Supabase Auth Resend ─────────────────────────────────────────
+    // Using signInWithOtp will send a fresh verification code to the user.
+    // NOTE: Supabase has a 60-second rate limit between resends.
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
     })
 
-    // Generate new 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
-    await prisma.otpToken.create({
-      data: {
-        email,
-        otp,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 mins
+    if (error) {
+      console.error('Supabase Resend error:', error.message)
+      
+      // Handle the 60-second rate limit error specifically
+      if (error.message.includes('60 seconds')) {
+        return NextResponse.json({ 
+          error: 'Please wait 60 seconds before requesting another code.' 
+        }, { status: 429 })
       }
-    })
 
-    // In a real app, send email/SMS here. For now, log to console:
-    console.log(`\n\n=== RESENT OTP FOR ${email}: ${otp} ===\n\n`)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true, message: 'OTP resent successfully' })
+    return NextResponse.json({ success: true, message: 'A new OTP has been sent to your email!' })
   } catch (error) {
-    console.error('Resend OTP error:', error)
-    return NextResponse.json({ error: 'Failed to resend OTP' }, { status: 500 })
+    console.error('Resend OTP API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
