@@ -1,73 +1,52 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import { createClient } from '@supabase/supabase-js'
 
-// ── Pattern: Resilience & Local-First ─────────────────────────────────────────
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export async function POST(request: Request) {
   try {
     const { name, email, phone, password } = await request.json()
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    // ── Try Database Operations ──────────────────────────────────────────────
-    try {
-      const { prisma } = await import('@/lib/prisma')
-      
-      const existingUser = await (prisma as any).user.findUnique({ where: { email } })
-      if (existingUser) {
-        if (!existingUser.verified) {
-          // If the account is unverified, delete it and its OTPs so they can try registering again
-          await (prisma as any).otpToken.deleteMany({ where: { email } })
-          await (prisma as any).user.delete({ where: { email } })
-        } else {
-          return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
-        }
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10)
-      const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
-      await (prisma as any).user.create({
+    // ── Pattern: Supabase Auth (Option 1: FREE REAL OTP) ──────────────────────
+    // This sends the real OTP email via Supabase's free mail server (2500/mo)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
         data: {
-          name,
-          email,
+          full_name: name,
           phone: phone || '',
-          password: hashedPassword,
-          role: 'customer',
-          verified: false
-        }
-      })
+        },
+      },
+    })
 
-      await (prisma as any).otpToken.create({
-        data: {
-          email,
-          otp,
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 mins
-        }
-      })
-
-      // In a real app, send email/SMS here.
-      console.log(`\n\n=== OTP FOR ${email}: ${otp} ===\n\n`)
-
-      return NextResponse.json({ success: true, message: 'OTP generated' })
-
-    } catch (dbError) {
-      console.error('Database connection failed during registration:', dbError)
+    if (error) {
+      console.error('Supabase Auth error:', error.message)
       
-      // ── Fallback: "Mock Registration" for Demo/Dev Mode ────────────────────
-      // If the database is unreachable (e.g. restez.in without credentials),
-      // we allow the user to "register" locally so they can see the flow.
+      // If user already exists, Supabase might return an error or just nothing depending on config
+      if (error.message.includes('already registered')) {
+        return NextResponse.json({ error: 'User already exists' }, { status: 400 })
+      }
       
-      return NextResponse.json({ 
-        success: true, 
-        message: 'OTP generated (Mock Mode)', 
-        isMock: true,
-        mockOtp: '123456' // In mock mode, we provide a static OTP for the next step
-      })
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'OTP sent to your email!',
+      // In Supabase, the user is created in "unverified" state until OTP is entered
+      user: data.user 
+    })
+
   } catch (error) {
-    console.error('Fatal Registration error:', error)
-    return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
+    console.error('Registration API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
