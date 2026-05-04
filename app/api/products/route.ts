@@ -37,14 +37,19 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { prisma } = await import('@/lib/prisma')
 
-    if (!body.name || !body.slug || !body.base_price) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    console.log('Creating product with data:', JSON.stringify(body, null, 2))
+
+    if (!body.name || !body.base_price) {
+      return NextResponse.json({ error: 'Missing required fields: name and base_price are required' }, { status: 400 })
     }
+
+    // Generate slug if missing
+    const slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
     const newProduct = await (prisma as any).product.create({
       data: {
         name: body.name,
-        slug: body.slug,
+        slug: slug,
         description: body.description || '',
         base_price: Number(body.base_price),
         category: body.category || '',
@@ -58,12 +63,17 @@ export async function POST(request: Request) {
         in_stock: Boolean(body.in_stock),
         featured: Boolean(body.featured),
         fabric_images: JSON.stringify(body.fabric_images || {}),
+        premium_upcharge: Number(body.premium_upcharge) || 0,
       },
     })
 
     return NextResponse.json(newProduct, { status: 201 })
-  } catch (err) {
-    console.error('Failed to create product:', err)
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
+  } catch (err: any) {
+    console.error('CRITICAL: Failed to create product:', err)
+    return NextResponse.json({ 
+      error: 'Failed to create product', 
+      details: err.message,
+      code: err.code 
+    }, { status: 500 })
   }
 }
