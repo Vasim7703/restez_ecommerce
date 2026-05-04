@@ -36,7 +36,12 @@ export default function AdminOrdersPage() {
       try {
         const res = await fetch('/api/orders')
         const data = await res.json()
-        setOrders(data)
+        if (Array.isArray(data)) {
+          setOrders(data)
+        } else {
+          setOrders([])
+          console.error('Failed to load orders, expected array but got:', data)
+        }
       } catch (err) {
         console.error('Failed to load orders', err)
       } finally {
