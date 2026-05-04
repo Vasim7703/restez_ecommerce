@@ -34,10 +34,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { requireAdmin } = await import('@/lib/auth-guard')
-    const { session, error } = await requireAdmin()
-    if (error) return error
-
     const body = await request.json()
     const { prisma } = await import('@/lib/prisma')
 

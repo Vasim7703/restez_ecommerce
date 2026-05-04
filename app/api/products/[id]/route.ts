@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/auth-guard'
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const { error } = await requireAdmin()
-  if (error) return error
 
   try {
     const body = await request.json()
@@ -44,20 +41,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       fabric_images: JSON.parse(updatedProduct.fabric_images || '{}'),
     }
     return NextResponse.json(parsed)
-  } catch {
+  } catch (err) {
+    console.error('Failed to update product:', err)
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const { error } = await requireAdmin()
-  if (error) return error
 
   try {
     await prisma.product.delete({ where: { id: resolvedParams.id } })
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('Failed to delete product:', err)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }
