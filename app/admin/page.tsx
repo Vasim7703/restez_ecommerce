@@ -1,58 +1,83 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { DollarSign, Package, ShoppingCart, TrendingUp, Users } from 'lucide-react'
+import { DollarSign, Package, ShoppingCart, TrendingUp, Users, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
+import { useEffect, useState } from 'react'
+
+interface DashboardData {
+  stats: {
+    totalRevenue: number
+    totalOrders: number
+    totalProducts: number
+    totalUsers: number
+  }
+  recentOrders: {
+    id: string
+    customer: string
+    product: string
+    amount: number
+    status: string
+    date: string
+  }[]
+}
 
 export default function AdminDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const response = await fetch('/api/admin/stats')
+        const result = await response.json()
+        setData(result)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="h-[70vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-emerald animate-spin" />
+      </div>
+    )
+  }
+
   const stats = [
     {
       title: 'Total Revenue',
-      value: formatPrice(2450000),
-      change: '+12.5%',
+      value: formatPrice(data?.stats.totalRevenue || 0),
+      change: 'Live',
       changeType: 'positive',
       icon: DollarSign,
     },
     {
       title: 'Total Orders',
-      value: '156',
-      change: '+8.2%',
+      value: data?.stats.totalOrders.toString() || '0',
+      change: 'Real-time',
       changeType: 'positive',
       icon: ShoppingCart,
     },
     {
       title: 'Products',
-      value: '48',
-      change: '+3 new',
+      value: data?.stats.totalProducts.toString() || '0',
+      change: 'Database',
       changeType: 'neutral',
       icon: Package,
     },
     {
       title: 'Customers',
-      value: '892',
-      change: '+15.3%',
+      value: data?.stats.totalUsers.toString() || '0',
+      change: 'Active',
       changeType: 'positive',
       icon: Users,
-    },
-  ]
-
-  const recentOrders = [
-    {
-      id: 'RST1704567890ABC',
-      customer: 'Rahul Sharma',
-      product: 'Royal Maharaja 3-Seater',
-      amount: 89999,
-      status: 'manufacturing',
-      date: '2026-04-10',
-    },
-    {
-      id: 'RST1704567891DEF',
-      customer: 'Priya Patel',
-      product: 'Modern Elegance L-Shape',
-      amount: 124999,
-      status: 'shipped',
-      date: '2026-04-09',
     },
   ]
 
@@ -141,10 +166,10 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {recentOrders.map((order) => (
+              {data?.recentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-montserrat text-emerald font-medium">
-                    {order.id}
+                    {order.id.substring(0, 15)}...
                   </td>
                   <td className="px-6 py-4 text-sm font-montserrat text-gray-900">{order.customer}</td>
                   <td className="px-6 py-4 text-sm font-montserrat text-gray-900">{order.product}</td>
@@ -154,7 +179,7 @@ export default function AdminDashboard() {
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 text-xs font-montserrat font-semibold rounded-full ${
-                        statusColors[order.status as keyof typeof statusColors]
+                        statusColors[order.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'
                       }`}
                     >
                       {order.status.replace('_', ' ')}
@@ -162,6 +187,13 @@ export default function AdminDashboard() {
                   </td>
                 </tr>
               ))}
+              {(!data?.recentOrders || data.recentOrders.length === 0) && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500 font-montserrat">
+                    No orders found in the database.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
