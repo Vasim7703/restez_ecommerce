@@ -53,21 +53,21 @@ export default function AdminDashboard() {
   const stats = [
     {
       title: 'Total Revenue',
-      value: formatPrice(data?.stats.totalRevenue || 0),
+      value: formatPrice(data?.stats?.totalRevenue || 0),
       change: 'Live',
       changeType: 'positive',
       icon: DollarSign,
     },
     {
       title: 'Total Orders',
-      value: data?.stats.totalOrders.toString() || '0',
+      value: data?.stats?.totalOrders?.toString() || '0',
       change: 'Real-time',
       changeType: 'positive',
       icon: ShoppingCart,
     },
     {
       title: 'Products',
-      value: data?.stats.totalProducts.toString() || '0',
+      value: data?.stats?.totalProducts?.toString() || '0',
       change: 'Database',
       changeType: 'neutral',
       icon: Package,
