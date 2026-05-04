@@ -90,52 +90,32 @@ export async function POST(request: Request) {
     const discount = Math.min(Math.max(0, Number(body.discount) || 0), serverTotal)
     const total    = serverTotal - discount
 
-    // --- Persist order if DB is available ---
-    if (!usingMock) {
-      try {
-        const newOrder = await prisma.order.create({
-          data: {
-            customer_name,
-            email,
-            phone,
-            address:        JSON.stringify(body.address || {}),
-            items:          JSON.stringify(validatedItems),
-            subtotal:       serverTotal,
-            discount,
-            total,
-            status:         'pending',
-            payment_method: sanitize(body.payment_method, 50) || 'cod',
-            payment_status: sanitize(body.payment_status, 100) || 'Pending',
-          },
-        })
-        return NextResponse.json({ success: true, order: newOrder })
-      } catch (saveErr) {
-        if (isDbError(saveErr)) {
-          console.warn('DB unavailable, returning mock order confirmation')
-        } else {
-          throw saveErr
-        }
-      }
+    // --- Persist order ---
+    try {
+      const newOrder = await prisma.order.create({
+        data: {
+          customer_name,
+          email,
+          phone,
+          address:        JSON.stringify(body.address || {}),
+          items:          JSON.stringify(validatedItems),
+          subtotal:       serverTotal,
+          discount,
+          total,
+          status:         'pending',
+          payment_method: sanitize(body.payment_method, 50) || 'cod',
+          payment_status: sanitize(body.payment_status, 100) || 'Pending',
+        },
+      })
+      return NextResponse.json({ success: true, order: newOrder })
+    } catch (saveErr: any) {
+      console.error('CRITICAL: Database failed to save order:', saveErr)
+      return NextResponse.json({ 
+        error: 'Database connection failed. Order could not be saved.',
+        details: saveErr.message,
+        code: saveErr.code
+      }, { status: 503 })
     }
-
-    // Mock order confirmation (DB unavailable)
-    const mockOrder = {
-      id: `MOCK-${Date.now()}`,
-      customer_name,
-      email,
-      phone,
-      address: body.address || {},
-      items: validatedItems,
-      subtotal: serverTotal,
-      discount,
-      total,
-      status: 'pending',
-      payment_method: sanitize(body.payment_method, 50) || 'cod',
-      payment_status: sanitize(body.payment_status, 100) || 'Pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    return NextResponse.json({ success: true, order: mockOrder })
 
   } catch (err: any) {
     console.error('Error creating order:', err)
