@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Supabase OTP error:', error.message)
-      return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 })
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     // Success! Supabase automatically handles sessions and logging in

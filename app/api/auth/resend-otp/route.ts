@@ -15,9 +15,10 @@ export async function POST(request: Request) {
     }
 
     // ── Pattern: Supabase Auth Resend ─────────────────────────────────────────
-    // Using signInWithOtp will send a fresh verification code to the user.
+    // Using resend() with type 'signup' ensures the new code works for verification.
     // NOTE: Supabase has a 60-second rate limit between resends.
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
       email,
     })
 
