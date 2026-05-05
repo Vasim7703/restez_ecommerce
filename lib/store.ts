@@ -47,12 +47,17 @@ interface CartStore {
   clearCart: () => void
   getTotal: () => number
   getItemCount: () => number
+  discount: number
+  setDiscount: (amount: number) => void
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      discount: 0,
+      
+      setDiscount: (amount) => set({ discount: amount }),
       
       addToCart: (item) => {
         const items = get().items
@@ -89,7 +94,7 @@ export const useCartStore = create<CartStore>()(
         }
       },
       
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], discount: 0 }),
       
       getTotal: () => {
         return get().items.reduce((total, item) => total + item.total_price * item.quantity, 0)

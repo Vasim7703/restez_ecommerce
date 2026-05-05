@@ -11,12 +11,12 @@ import AuthModal from '@/components/AuthModal'
 
 export default function CartPage() {
   const router = useRouter()
-  const { items, removeFromCart, updateQuantity, getTotal, clearCart } = useCartStore()
+  const { items, removeFromCart, updateQuantity, getTotal, clearCart, discount, setDiscount } = useCartStore()
   const { isAuthenticated } = useAuthStore()
   const { showToast } = useToast()
 
   const [couponCode, setCouponCode] = useState('')
-  const [discount, setDiscount] = useState(0)
+  // using discount from cart store
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const subtotal = getTotal()
@@ -24,10 +24,11 @@ export default function CartPage() {
   const total = subtotal + shipping - discount
 
   const applyCoupon = () => {
-    if (couponCode === 'FESTIVE20') {
+    const code = couponCode.trim()
+    if (code === 'FESTIVE20') {
       setDiscount(subtotal * 0.2)
       showToast('Coupon applied! 20% discount added 🎉', 'success')
-    } else if (couponCode === 'WELCOME10') {
+    } else if (code === 'WELCOME10') {
       setDiscount(subtotal * 0.1)
       showToast('Coupon applied! 10% discount added ✨', 'success')
     } else {

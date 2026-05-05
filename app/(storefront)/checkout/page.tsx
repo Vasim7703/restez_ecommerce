@@ -28,7 +28,7 @@ const paymentMethods = [
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, getTotal, clearCart } = useCartStore()
+  const { items, getTotal, clearCart, discount } = useCartStore()
   const { addresses, addOrder, addAddress } = useUserMetaStore()
   const { user, isAuthenticated } = useAuthStore()
   
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   const subtotal = getTotal()
   const shipping = subtotal > 50000 ? 0 : 2000
   const assemblyFee = addAssembly ? 999 : 0
-  const total = subtotal + shipping + assemblyFee
+  const total = subtotal + shipping + assemblyFee - discount
 
   const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-luxury font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-emerald bg-white transition-all'
   const labelCls = 'block text-xs font-montserrat font-semibold text-gray-600 mb-1.5'
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
           },
           items:          mappedItems,
           subtotal,
-          discount:       0,
+          discount:       discount,
           total,
           payment_method: paymentMethod,
           payment_status: statusLabel,
@@ -641,6 +641,12 @@ export default function CheckoutPage() {
                 </div>
                 {subtotal < 50000 && (
                   <p className="text-xs text-gold font-montserrat">Add {formatPrice(50000 - subtotal)} more for free shipping</p>
+                )}
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm font-montserrat text-green-600">
+                    <span>Discount</span>
+                    <span className="font-semibold text-green-600">-{formatPrice(discount)}</span>
+                  </div>
                 )}
                 {addAssembly && (
                   <div className="flex justify-between text-sm font-montserrat text-gray-600">

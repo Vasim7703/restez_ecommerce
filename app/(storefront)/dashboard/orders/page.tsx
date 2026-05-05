@@ -17,7 +17,12 @@ export default function OrdersPage() {
     fetch('/api/orders')
       .then(res => res.json())
       .then(data => {
-        setOrders(data)
+        if (Array.isArray(data)) {
+          setOrders(data)
+        } else {
+          setOrders([])
+          console.error("API returned error:", data)
+        }
         setLoading(false)
       })
       .catch(err => {
