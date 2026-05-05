@@ -16,15 +16,18 @@ function isValidPhone(phone: string) {
 }
 
 /** True when the database is unavailable (no credentials, connection refused, etc.) */
-function isDbError(err: unknown): boolean {
+export function isDbError(err: any): boolean {
   if (!err) return false
-  const msg = String((err as any).message ?? '')
+  const msg = (err.message || '').toString()
+  const code = (err.code || '').toString()
   return (
-    msg.includes('ENOTFOUND') ||
     msg.includes('ECONNREFUSED') ||
+    msg.includes('ENOTFOUND') ||
     msg.includes('connect ETIMEDOUT') ||
-    msg.includes('P1001') || // Prisma: "Can't reach database server"
-    msg.includes('P1003') || // Prisma: "Database does not exist"
+    code === 'P1001' || msg.includes('P1001') || msg.includes("Can't reach database server") ||
+    code === 'P1003' || msg.includes('P1003') ||
+    code === 'P2021' || msg.includes('P2021') ||
+    code === 'P2022' || msg.includes('P2022') ||
     msg.includes('P2021') || // Prisma: "Table does not exist"
     msg.includes('P2022') || // Prisma: "Column does not exist"
     msg.includes('Environment variable not found')
