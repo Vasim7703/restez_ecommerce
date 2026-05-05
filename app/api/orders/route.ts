@@ -25,6 +25,8 @@ function isDbError(err: unknown): boolean {
     msg.includes('connect ETIMEDOUT') ||
     msg.includes('P1001') || // Prisma: "Can't reach database server"
     msg.includes('P1003') || // Prisma: "Database does not exist"
+    msg.includes('P2021') || // Prisma: "Table does not exist"
+    msg.includes('P2022') || // Prisma: "Column does not exist"
     msg.includes('Environment variable not found')
   )
 }
