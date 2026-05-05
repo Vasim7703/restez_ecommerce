@@ -16,7 +16,7 @@ function isValidPhone(phone: string) {
 }
 
 /** True when the database is unavailable (no credentials, connection refused, etc.) */
-export function isDbError(err: any): boolean {
+function isDbError(err: any): boolean {
   if (!err) return false
   const msg = (err.message || '').toString()
   const code = (err.code || '').toString()
