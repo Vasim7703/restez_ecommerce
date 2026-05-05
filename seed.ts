@@ -1,5 +1,5 @@
-import { prisma } from './lib/prisma.ts'
-import { mockProducts } from './lib/mockData.ts'
+import { prisma } from './lib/prisma'
+import { mockProducts } from './lib/mockData'
 
 async function main() {
   for (const p of mockProducts) {
