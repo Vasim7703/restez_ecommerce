@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, X, Image as ImageIcon, Check } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, X, Image as ImageIcon, Check, Loader2, Upload } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { Product } from '@/lib/supabase'
 
@@ -41,6 +41,38 @@ export default function AdminProductsPage() {
   const [fabricImages, setFabricImages] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<'basic' | 'images' | 'fabrics'>('basic')
+  const [uploadingField, setUploadingField] = useState<string | null>(null)
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, isFabric: boolean = false) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingField(isFabric ? `fabric_${fieldName}` : fieldName)
+    
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+
+      if (isFabric) {
+        setFabricImages(prev => ({ ...prev, [fieldName]: data.url }))
+      } else {
+        setForm(prev => ({ ...prev, [fieldName]: data.url }))
+      }
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || 'Failed to upload image')
+    } finally {
+      setUploadingField(null)
+    }
+  }
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -440,7 +472,7 @@ export default function AdminProductsPage() {
                 {activeTab === 'images' && (
                   <div className="space-y-4">
                     <p className="text-xs text-gray-500 font-montserrat bg-emerald/5 border border-emerald/20 p-3 rounded-luxury">
-                      💡 Paste image URLs for each view. If you only have one photo, paste the same URL in all fields — the scrollytelling will still work correctly as it labels each section.
+                      💡 Upload an image for each view. If you only have one photo, upload it to the Main Image.
                     </p>
                     {[
                       { field: 'img_main', label: 'Main Image (thumbnail & hero) *' },
@@ -453,21 +485,31 @@ export default function AdminProductsPage() {
                       <div key={field}>
                         <label className={labelCls}>{label}</label>
                         <div className="flex space-x-2">
-                          <input
-                            value={(form as any)[field]}
-                            onChange={e => set(field, e.target.value)}
-                            placeholder="https://..."
-                            className={`${inputCls} flex-1`}
-                          />
-                          {(form as any)[field] && (
-                            <div
-                              className="w-10 h-10 rounded-lg bg-cover bg-center border border-gray-200 flex-shrink-0"
-                              style={{ backgroundImage: `url(${(form as any)[field]})` }}
+                          <label className={`flex-1 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-luxury hover:bg-gray-50 transition-colors cursor-pointer p-3 ${uploadingField === field ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={e => handleUpload(e, field)}
+                              className="hidden"
                             />
-                          )}
-                          {!(form as any)[field] && (
-                            <div className="w-10 h-10 rounded-lg border border-dashed border-gray-200 flex-shrink-0 flex items-center justify-center">
-                              <ImageIcon className="w-4 h-4 text-gray-300" />
+                            {uploadingField === field ? (
+                              <div className="flex items-center text-gray-500 text-sm font-montserrat">
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-gray-500 text-sm font-montserrat">
+                                <Upload className="w-4 h-4 mr-2" /> 
+                                {(form as any)[field] ? 'Replace Image' : 'Choose File'}
+                              </div>
+                            )}
+                          </label>
+                          {(form as any)[field] ? (
+                            <div className="relative w-12 h-12 rounded-lg bg-cover bg-center border border-gray-200 flex-shrink-0 group" style={{ backgroundImage: `url(${(form as any)[field]})` }}>
+                               <button onClick={() => set(field, '')} className="absolute -top-2 -right-2 bg-white rounded-full p-0.5 shadow hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg border border-dashed border-gray-200 flex-shrink-0 flex items-center justify-center">
+                              <ImageIcon className="w-5 h-5 text-gray-300" />
                             </div>
                           )}
                         </div>
@@ -527,7 +569,7 @@ export default function AdminProductsPage() {
                             <div>
                               <p className="text-xs font-montserrat font-bold text-blue-700">Fabric-Specific Product Images</p>
                               <p className="text-xs font-montserrat text-blue-600 mt-0.5 leading-relaxed">
-                                Paste the image URL for each fabric below. When a customer selects that fabric on the product page, they will see the exact photo — no colour filter.
+                                Upload the image for each fabric below. When a customer selects that fabric on the product page, they will see the exact photo — no colour filter.
                               </p>
                             </div>
                           </div>
@@ -542,13 +584,24 @@ export default function AdminProductsPage() {
                                   <label className="text-sm font-montserrat font-semibold text-charcoal">{name}</label>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <input
-                                    type="url"
-                                    value={fabricImages[name] || ''}
-                                    onChange={e => setFabricImages(prev => ({ ...prev, [name]: e.target.value }))}
-                                    placeholder="https://... (paste image URL for this fabric colour)"
-                                    className={`${inputCls} flex-1 text-sm`}
-                                  />
+                                  <label className={`flex-1 flex items-center justify-center border border-gray-300 bg-white rounded-luxury hover:bg-gray-50 transition-colors cursor-pointer py-2 px-3 text-sm ${uploadingField === \`fabric_\${name}\` ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={e => handleUpload(e, name, true)}
+                                      className="hidden"
+                                    />
+                                    {uploadingField === \`fabric_\${name}\` ? (
+                                      <div className="flex items-center text-gray-500 font-montserrat">
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center text-gray-600 font-montserrat">
+                                        <Upload className="w-4 h-4 mr-2" /> 
+                                        {fabricImages[name] ? 'Replace Image' : 'Choose File'}
+                                      </div>
+                                    )}
+                                  </label>
                                   {/* Live preview thumbnail */}
                                   {fabricImages[name] ? (
                                     <div

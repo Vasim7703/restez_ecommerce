@@ -44,7 +44,13 @@ export async function POST(request: Request) {
     }
 
     // Generate slug if missing
-    const slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    let slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+    // Check if slug exists to prevent P2002 unique constraint error
+    const existing = await (prisma as any).product.findUnique({ where: { slug } })
+    if (existing) {
+      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`
+    }
 
     const newProduct = await (prisma as any).product.create({
       data: {
@@ -70,8 +76,11 @@ export async function POST(request: Request) {
     return NextResponse.json(newProduct, { status: 201 })
   } catch (err: any) {
     console.error('CRITICAL: Failed to create product:', err)
+    if (err.code === 'P2002') {
+      return NextResponse.json({ error: 'A product with this name or slug already exists.' }, { status: 400 })
+    }
     return NextResponse.json({ 
-      error: 'Failed to create product', 
+      error: err.message || 'Failed to create product', 
       details: err.message,
       code: err.code 
     }, { status: 500 })

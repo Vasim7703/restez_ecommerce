@@ -1,41 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const formData = await req.formData()
+    const formData = await request.formData()
     const file = formData.get('file') as File | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = new Uint8Array(bytes)
+    // Generate unique filename to prevent collisions
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
 
-    // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    try {
-      await mkdir(uploadDir, { recursive: true })
-    } catch (err) {
-      // Ignore if directory already exists
+    const { data, error } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (error) {
+      console.error('Supabase upload error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Clean filename and make unique
-    const uniqueId = Math.random().toString(36).substring(2, 8) + Date.now().toString(36)
-    const originalName = file.name.replace(/[^a-zA-Z0-9.\-]/g, '_')
-    const fileName = `${uniqueId}-${originalName}`
-    const filePath = path.join(uploadDir, fileName)
+    const { data: { publicUrl } } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(fileName)
 
-    await writeFile(filePath, buffer)
-
-    // Return the public URL
-    const fileUrl = `/uploads/${fileName}`
-
-    return NextResponse.json({ success: true, url: fileUrl })
-  } catch (error: any) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Upload failed: ' + error.message }, { status: 500 })
+    return NextResponse.json({ url: publicUrl })
+  } catch (err: any) {
+    console.error('Upload handler error:', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }

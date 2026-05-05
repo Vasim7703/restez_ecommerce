@@ -7,11 +7,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json()
 
+    let slug = String(body.slug).slice(0, 200).replace(/[^a-z0-9-]/gi, '-')
+    const existing = await prisma.product.findUnique({ where: { slug } })
+    if (existing && existing.id !== resolvedParams.id) {
+      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id: resolvedParams.id },
       data: {
         name: String(body.name).slice(0, 200),
-        slug: String(body.slug).slice(0, 200).replace(/[^a-z0-9-]/gi, '-'),
+        slug: slug,
         description: String(body.description || '').slice(0, 2000),
         base_price: Math.max(0, Number(body.base_price) || 0),
         premium_upcharge: Math.max(0, Number(body.premium_upcharge) || 0),
@@ -41,9 +47,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       fabric_images: JSON.parse(updatedProduct.fabric_images || '{}'),
     }
     return NextResponse.json(parsed)
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to update product:', err)
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+    if (err.code === 'P2002') {
+      return NextResponse.json({ error: 'A product with this name or slug already exists.' }, { status: 400 })
+    }
+    return NextResponse.json({ error: err.message || 'Failed to update product' }, { status: 500 })
   }
 }
 
