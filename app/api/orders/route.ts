@@ -121,10 +121,8 @@ export async function POST(request: Request) {
 
   } catch (err: any) {
     console.error('Error creating order:', err)
-    // Never expose raw DB/Prisma errors to the client
-    const safeMessage = isDbError(err)
-      ? 'Order service temporarily unavailable. Please try again shortly.'
-      : (err.message?.length < 200 ? err.message : 'Failed to process checkout')
+    // Temporary debugging: expose exact error message to client
+    const safeMessage = err.message || 'Failed to process checkout'
     return NextResponse.json({ error: safeMessage }, { status: 500 })
   }
 }
