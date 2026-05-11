@@ -23,11 +23,12 @@ function SearchPageContent() {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(err => {
         console.error("Failed to fetch products:", err)
+        setProducts([])
         setLoading(false)
       })
   }, [])

@@ -26,11 +26,12 @@ export default function AdminProductsPage() {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(err => {
         console.error(err)
+        setProducts([])
         setLoading(false)
       })
   }, [])

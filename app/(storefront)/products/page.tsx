@@ -93,11 +93,13 @@ export default function ProductsPage() {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data)
+        // Guard: only set products if the response is an array
+        setProducts(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(err => {
         console.error("Failed to fetch products:", err)
+        setProducts([])
         setLoading(false)
       })
   }, [])
