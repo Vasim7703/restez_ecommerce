@@ -584,14 +584,14 @@ export default function AdminProductsPage() {
                                   <label className="text-sm font-montserrat font-semibold text-charcoal">{name}</label>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <label className={`flex-1 flex items-center justify-center border border-gray-300 bg-white rounded-luxury hover:bg-gray-50 transition-colors cursor-pointer py-2 px-3 text-sm ${uploadingField === \`fabric_\${name}\` ? 'opacity-50 pointer-events-none' : ''}`}>
+                                  <label className={`flex-1 flex items-center justify-center border border-gray-300 bg-white rounded-luxury hover:bg-gray-50 transition-colors cursor-pointer py-2 px-3 text-sm ${uploadingField === `fabric_${name}` ? 'opacity-50 pointer-events-none' : ''}`}>
                                     <input
                                       type="file"
                                       accept="image/*"
                                       onChange={e => handleUpload(e, name, true)}
                                       className="hidden"
                                     />
-                                    {uploadingField === \`fabric_\${name}\` ? (
+                                    {uploadingField === `fabric_${name}` ? (
                                       <div className="flex items-center text-gray-500 font-montserrat">
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
                                       </div>

@@ -24,12 +24,13 @@ function isDbError(err: any): boolean {
     msg.includes('ECONNREFUSED') ||
     msg.includes('ENOTFOUND') ||
     msg.includes('connect ETIMEDOUT') ||
-    code === 'P1001' || msg.includes('P1001') || msg.includes("Can't reach database server") ||
-    code === 'P1003' || msg.includes('P1003') ||
-    code === 'P2021' || msg.includes('P2021') ||
-    code === 'P2022' || msg.includes('P2022') ||
-    msg.includes('P2021') || // Prisma: "Table does not exist"
-    msg.includes('P2022') || // Prisma: "Column does not exist"
+    code === 'P1001' || msg.includes('P1001') || // Connection failure
+    code === 'P1002' || msg.includes('P1002') || // Connection timeout
+    code === 'P1008' || msg.includes('P1008') || // Operations timeout
+    code === 'P1003' || msg.includes('P1003') || // DB does not exist
+    code === 'P2021' || msg.includes('P2021') || // Table does not exist
+    code === 'P2022' || msg.includes('P2022') || // Column does not exist
+    msg.includes("Can't reach database server") ||
     msg.includes('Environment variable not found')
   )
 }
@@ -116,9 +117,10 @@ export async function POST(request: Request) {
     } catch (saveErr: any) {
       console.error('CRITICAL: Database failed to save order:', saveErr)
       return NextResponse.json({ 
-        error: 'Database connection failed. Order could not be saved.',
-        details: saveErr.message,
-        code: saveErr.code
+        error: 'Order could not be saved.',
+        details: saveErr.message || 'Unknown database error',
+        code: saveErr.code,
+        suggestion: 'Check if your database connection string is correct and the table exists.'
       }, { status: 503 })
     }
 

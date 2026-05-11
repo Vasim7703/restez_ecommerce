@@ -5,18 +5,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    // Dynamic import to prevent crash if Prisma client is stale or missing
     const { prisma } = await import('@/lib/prisma')
     
     const products = await (prisma as any).product.findMany({ 
       include: { reviews: true } 
     })
     
-    if (!products || products.length === 0) {
-      return NextResponse.json(mockProducts)
-    }
-
-    const parsed = products.map((p: any) => ({
+    // Convert Prisma records to match the Product interface
+    const parsed = (products || []).map((p: any) => ({
       ...p,
       dimensions: typeof p.dimensions === 'string' ? JSON.parse(p.dimensions) : p.dimensions,
       fabric_options: typeof p.fabric_options === 'string' ? JSON.parse(p.fabric_options) : p.fabric_options,
@@ -26,9 +22,8 @@ export async function GET() {
     
     return NextResponse.json(parsed)
   } catch (err) {
-    console.error('Products API fallback triggered:', err)
-    // Always return an array (mock data) so frontend components don't crash
-    return NextResponse.json(mockProducts)
+    console.error('Products API error:', err)
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
 

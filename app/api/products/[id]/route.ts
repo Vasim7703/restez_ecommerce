@@ -56,13 +56,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: Request, { params }: { params: any }) {
   const resolvedParams = await params;
 
   try {
     await prisma.product.delete({ where: { id: resolvedParams.id } })
     return NextResponse.json({ success: true })
-  } catch (err) {
+  } catch (err: any) {
+    // P2025 means "Record to delete does not exist", which is fine for a delete operation
+    if (err.code === 'P2025') {
+      return NextResponse.json({ success: true, message: 'Product already deleted' })
+    }
     console.error('Failed to delete product:', err)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
