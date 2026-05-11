@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Award, Truck, Shield, Users, RotateCcw, Maximize2 } from 'lucide-react'
+import { ArrowRight, Award, Truck, Shield, Users, RotateCcw, Maximize2, Star } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import { formatPrice } from '@/lib/utils'
 
 declare global {
   namespace JSX {
@@ -101,7 +102,6 @@ export default function HomePage() {
           setHeroSlides(data1.data.slides || [])
           setHeroInterval(data1.data.interval || 5000)
         } else {
-          // Fallback if no CMS data exists yet
           setHeroSlides([
             {
               title: 'Royal Heritage Collection',
@@ -121,6 +121,22 @@ export default function HomePage() {
         console.error('Failed to load CMS data', err)
       })
       .finally(() => setCmsLoading(false))
+  }, [])
+
+  // ── Auto-fetch featured products from database ───────────────────
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([])
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Show featured first, then fill up to 6 total
+          const featured = data.filter((p: any) => p.featured)
+          const rest = data.filter((p: any) => !p.featured)
+          setFeaturedProducts([...featured, ...rest].slice(0, 6))
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Hero auto-advance
@@ -375,6 +391,103 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Featured Products (auto-loaded from database) ────────── */}
+      {featuredProducts.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-14"
+            >
+              <p className="text-gold font-montserrat text-xs tracking-[0.35em] uppercase mb-3">Our Collection</p>
+              <h2 className="text-4xl md:text-5xl font-playfair font-bold text-emerald mb-4">
+                Featured Products
+              </h2>
+              <p className="text-gray-500 font-montserrat max-w-xl mx-auto">
+                Handcrafted luxury sofas, ready to transform your living space
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              {featuredProducts.map((product, index) => {
+                const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images
+                const mainImg = images?.main || '/sofas/sofa_emerald_velvet.png'
+                const avgRating = product.reviews?.length
+                  ? product.reviews.reduce((a: number, r: any) => a + r.rating, 0) / product.reviews.length
+                  : 0
+                return (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.08 }}
+                    className="group bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden border border-gray-100 transition-all duration-300"
+                  >
+                    <Link href={`/products/${product.slug}`} className="block">
+                      <div className="aspect-[4/3] overflow-hidden bg-gray-100 relative">
+                        <img
+                          src={mainImg}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {product.featured && (
+                          <div className="absolute top-3 left-3 bg-gold text-white text-[10px] font-montserrat font-bold px-2.5 py-1 rounded-full shadow">
+                            Featured
+                          </div>
+                        )}
+                        {!product.in_stock && (
+                          <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-montserrat font-bold px-2.5 py-1 rounded-full">
+                            Out of Stock
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="px-2 py-0.5 bg-emerald/10 text-emerald text-[10px] font-montserrat font-semibold rounded-full">{product.category}</span>
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-montserrat rounded-full">{product.material}</span>
+                        </div>
+                        <h3 className="font-playfair font-bold text-lg text-charcoal group-hover:text-emerald transition-colors line-clamp-1 mb-1">
+                          {product.name}
+                        </h3>
+                        {avgRating > 0 && (
+                          <div className="flex items-center gap-0.5 mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < Math.round(avgRating) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'}`} />
+                            ))}
+                            <span className="text-[10px] text-gray-400 font-montserrat ml-1">({product.reviews?.length})</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <p className="text-xl font-playfair font-bold text-emerald">
+                            {formatPrice(product.base_price)}
+                          </p>
+                          <span className="text-xs font-montserrat text-emerald font-semibold group-hover:underline flex items-center gap-1">
+                            View Details <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )
+              })}
+            </div>
+
+            <div className="text-center">
+              <Link
+                href="/products"
+                className="inline-flex items-center space-x-2 bg-emerald hover:bg-emerald-light text-white px-8 py-4 rounded-full font-montserrat font-semibold transition-all duration-300 shadow-lg hover:shadow-xl group"
+              >
+                <span>View All Products</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Collections Grid ────────────────────────────────────────── */}
       <section className="py-20 bg-gradient-to-b from-white to-emerald/5">

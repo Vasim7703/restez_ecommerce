@@ -7,11 +7,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json()
 
-    let slug = String(body.slug).slice(0, 200).replace(/[^a-z0-9-]/gi, '-')
-    const existing = await prisma.product.findUnique({ where: { slug } })
-    if (existing && existing.id !== resolvedParams.id) {
-      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`
-    }
+    // Generate a unique slug by always appending a random suffix — avoids extra findUnique() DB call
+    const baseSlug = String(body.slug || body.name || 'product')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+    const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`
 
     const updatedProduct = await prisma.product.update({
       where: { id: resolvedParams.id },

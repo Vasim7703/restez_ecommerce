@@ -32,36 +32,33 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { prisma } = await import('@/lib/prisma')
 
-    console.log('Creating product with data:', JSON.stringify(body, null, 2))
-
-    if (!body.name || !body.base_price) {
-      return NextResponse.json({ error: 'Missing required fields: name and base_price are required' }, { status: 400 })
+    if (!body.name) {
+      return NextResponse.json({ error: 'Missing required field: name' }, { status: 400 })
     }
 
-    // Generate slug if missing
-    let slug = body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-
-    // Check if slug exists to prevent P2002 unique constraint error
-    const existing = await (prisma as any).product.findUnique({ where: { slug } })
-    if (existing) {
-      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`
-    }
+    // Generate slug — suffix with random chars to avoid P2002 constraint
+    const baseSlug = (body.slug || body.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+    // Always add a random suffix so we never need a pre-check findUnique()
+    const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`
 
     const newProduct = await (prisma as any).product.create({
       data: {
         name: body.name,
-        slug: slug,
+        slug,
         description: body.description || '',
-        base_price: Number(body.base_price),
+        base_price: Number(body.base_price) || 0,
         category: body.category || '',
         collection: body.collection || '',
         material: body.material || '',
         style: body.style || '',
         seating_capacity: Number(body.seating_capacity) || 1,
         dimensions: JSON.stringify(body.dimensions || {}),
-        fabric_options: JSON.stringify(body.fabric_options || {}),
-        images: JSON.stringify(body.images || {}),
-        in_stock: Boolean(body.in_stock),
+        fabric_options: JSON.stringify(body.fabric_options || { standard: [], premium: [] }),
+        images: JSON.stringify(body.images || { main: '' }),
+        in_stock: body.in_stock !== false,
         featured: Boolean(body.featured),
         fabric_images: JSON.stringify(body.fabric_images || {}),
         premium_upcharge: Number(body.premium_upcharge) || 0,
@@ -71,13 +68,10 @@ export async function POST(request: Request) {
     return NextResponse.json(newProduct, { status: 201 })
   } catch (err: any) {
     console.error('CRITICAL: Failed to create product:', err)
-    if (err.code === 'P2002') {
-      return NextResponse.json({ error: 'A product with this name or slug already exists.' }, { status: 400 })
-    }
-    return NextResponse.json({ 
-      error: err.message || 'Failed to create product', 
+    return NextResponse.json({
+      error: err.message || 'Failed to create product',
       details: err.message,
-      code: err.code 
+      code: err.code,
     }, { status: 500 })
   }
 }
