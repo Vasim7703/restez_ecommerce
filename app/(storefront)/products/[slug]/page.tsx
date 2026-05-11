@@ -14,7 +14,6 @@ import { useCartStore, useWishlistStore, useAuthStore } from '@/lib/store'
 import { formatPrice, validatePincode, checkPincodeServiceability } from '@/lib/utils'
 import { Product, CartItem } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import AuthModal from '@/components/AuthModal'
 
 
 /** If admin uploaded a photo for this fabric, use it. Otherwise returns null — show base image unchanged. */
@@ -48,8 +47,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const { isAuthenticated } = useAuthStore()
   const { showToast } = useToast()
   const [inWishlist, setInWishlist] = useState(false)
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [pendingAddToCart, setPendingAddToCart] = useState(false)
 
   // Hydration fix for wishlist
   useState(() => {
@@ -153,8 +150,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      setPendingAddToCart(true)
-      setShowAuthModal(true)
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname))
       return
     }
     doAddToCart()
@@ -171,13 +167,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     }
     addToCart(cartItem)
     showToast(`${product.name} added to cart! 🛒`, 'success')
-  }
-
-  const handleAuthSuccess = () => {
-    if (pendingAddToCart) {
-      doAddToCart()
-      setPendingAddToCart(false)
-    }
   }
 
   return (
@@ -713,13 +702,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         onClose={() => setShowFitGuide(false)} 
         productDimensions={product.dimensions} 
         productName={product.name} 
-      />
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => { setShowAuthModal(false); setPendingAddToCart(false) }}
-        onSuccess={handleAuthSuccess}
-        message="Sign in to add items to your cart and track your orders"
       />
     </div>
   )

@@ -7,7 +7,6 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Lock } from 'lucide-react
 import { useCartStore, useAuthStore } from '@/lib/store'
 import { formatPrice } from '@/lib/utils'
 import { useToast } from '@/components/Toast'
-import AuthModal from '@/components/AuthModal'
 
 export default function CartPage() {
   const router = useRouter()
@@ -17,7 +16,6 @@ export default function CartPage() {
 
   const [couponCode, setCouponCode] = useState('')
   // using discount from cart store
-  const [showAuthModal, setShowAuthModal] = useState(false)
 
   const subtotal = getTotal()
   const shipping = subtotal > 50000 ? 0 : 2000
@@ -38,7 +36,7 @@ export default function CartPage() {
 
   const handleProceedToCheckout = () => {
     if (!isAuthenticated) {
-      setShowAuthModal(true)
+      router.push('/auth/signin?callbackUrl=/cart')
     } else {
       router.push('/checkout')
     }
@@ -262,14 +260,6 @@ export default function CartPage() {
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-
-      {/* Auth Modal — shown when guest tries to checkout */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => router.push('/checkout')}
-        message="Sign in or create an account to complete your purchase"
-      />
     </div>
   )
 }

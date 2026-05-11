@@ -202,9 +202,9 @@ export default function SignInPage() {
 
             {/* Forgot password */}
             <div className="flex justify-end">
-              <button type="button" className="text-sm font-montserrat text-gold hover:text-gold-dark transition-colors">
+              <Link href="/auth/forgot-password" className="text-sm font-montserrat text-gold hover:text-gold-dark transition-colors">
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             {/* Submit */}
