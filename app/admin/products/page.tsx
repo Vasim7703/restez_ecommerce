@@ -168,25 +168,44 @@ export default function AdminProductsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newProductData),
         })
-        if (!res.ok) throw new Error('Failed to update')
-        const updated = await res.json()
+        const updatedData = await res.json()
+        if (!res.ok) throw new Error(updatedData.error || updatedData.details || 'Failed to update product')
+        
+        // Re-parse JSON fields returned by API
+        const updated = {
+          ...updatedData,
+          dimensions: typeof updatedData.dimensions === 'string' ? JSON.parse(updatedData.dimensions) : updatedData.dimensions,
+          fabric_options: typeof updatedData.fabric_options === 'string' ? JSON.parse(updatedData.fabric_options) : updatedData.fabric_options,
+          images: typeof updatedData.images === 'string' ? JSON.parse(updatedData.images) : updatedData.images,
+          fabric_images: typeof updatedData.fabric_images === 'string' ? JSON.parse(updatedData.fabric_images || '{}') : (updatedData.fabric_images || {}),
+        }
         setProducts(products.map(p => p.id === editProduct.id ? updated : p))
       } else {
         const res = await fetch(`/api/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...newProductData, id: String(Date.now()) }),
+          body: JSON.stringify(newProductData),
         })
-        if (!res.ok) throw new Error('Failed to create')
-        const created = await res.json()
+        const createdData = await res.json()
+        if (!res.ok) throw new Error(createdData.error || createdData.details || 'Failed to create product')
+        
+        // Re-parse JSON fields returned by API
+        const created = {
+          ...createdData,
+          dimensions: typeof createdData.dimensions === 'string' ? JSON.parse(createdData.dimensions) : createdData.dimensions,
+          fabric_options: typeof createdData.fabric_options === 'string' ? JSON.parse(createdData.fabric_options) : createdData.fabric_options,
+          images: typeof createdData.images === 'string' ? JSON.parse(createdData.images) : createdData.images,
+          fabric_images: typeof createdData.fabric_images === 'string' ? JSON.parse(createdData.fabric_images || '{}') : (createdData.fabric_images || {}),
+          reviews: [],
+        }
         setProducts([...products, created])
       }
 
       setSaved(true)
       setTimeout(() => { setSaved(false); setShowModal(false) }, 1200)
-    } catch (err) {
-      console.error(err)
-      alert("Failed to save product")
+    } catch (err: any) {
+      console.error('Save product error:', err)
+      alert(err.message || 'Failed to save product')
     }
   }
 
