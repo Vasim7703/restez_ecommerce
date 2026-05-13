@@ -49,8 +49,8 @@ export default function HomePage() {
         const data1 = await res1.json()
         const data3 = await res3.json()
 
-        if (data1.success && data1.data && data1.data.slides?.length > 0) {
-          setHeroSlides(data1.data.slides)
+        if (data1.success && data1.data) {
+          setHeroSlides(data1.data.slides || [])
           setHeroInterval(data1.data.interval || 5000)
         }
 
@@ -93,19 +93,8 @@ export default function HomePage() {
           const toShow = [...featured, ...rest]
           setFeaturedProducts(toShow.slice(0, 6))
           
-          setHeroSlides(prev => {
-            if (prev.length > 0) return prev
-            return toShow.slice(0, 3).map(p => {
-               const images = typeof p.images === 'string' ? JSON.parse(p.images) : p.images
-               return {
-                 title: p.name,
-                 subtitle: p.description?.substring(0, 100) || '',
-                 image: images?.main || '',
-                 cta: 'View Details',
-                 link: `/products/${p.slug}`
-               }
-            })
-          })
+          // Removed heroSlides fallback logic here as per user request
+          // so that if they delete all slides from CMS, it doesn't auto-populate with products.
           
           const uniqueCollections = Array.from(new Set(data.map(p => p.collection || p.category))).filter(Boolean)
           const dynamicCols = uniqueCollections.slice(0, 4).map(cName => {
