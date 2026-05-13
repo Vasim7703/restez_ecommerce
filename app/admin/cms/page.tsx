@@ -126,7 +126,7 @@ export default function CMSPage() {
     setVideos(newVideos)
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number, type: 'slide' | 'fabric') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number, type: 'slide' | 'video_thumbnail' | 'about') => {
     const file = e.target.files?.[0]
     if (!file) return
 
