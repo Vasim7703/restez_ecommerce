@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ShieldCheck, Zap, Award, Users } from 'lucide-react'
 
@@ -28,6 +28,23 @@ const features = [
 ]
 
 export default function AboutPage() {
+  const [about, setAbout] = useState({
+    heading: 'The Artech Heritage',
+    content: 'Founded by Artech Furniture, RESTEZ was born from a singular vision: to redefine the Indian luxury furniture landscape. Our name, derived from the French word for "stay", invites you to linger in comfort and elegance.\n\nFor decades, our artisans have been the silent architects behind some of India\'s most prestigious interiors. Every sofa we create is a symphony of meticulously seasoned wood, hand-picked upholstery, and an obsessive attention to detail that only a master artisan can provide.\n\nWe don\'t just build furniture; we create heirlooms. From the intricate carvings of our Royal Heritage collection to the sleek lines of our Contemporary series, RESTEZ represents a legacy of excellence.',
+    image: '/sofas/sofa_emerald_velvet.png'
+  })
+
+  useEffect(() => {
+    fetch('/api/cms?key=about_page')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setAbout(data.data)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -63,17 +80,9 @@ export default function AboutPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl font-playfair font-bold text-emerald mb-8 italic">The Artech Heritage</h2>
-            <div className="space-y-6 text-gray-600 font-montserrat leading-relaxed">
-              <p>
-                Founded by Artech Furniture, RESTEZ was born from a singular vision: to redefine the Indian luxury furniture landscape. Our name, derived from the French word for "stay", invites you to linger in comfort and elegance.
-              </p>
-              <p>
-                For decades, our artisans have been the silent architects behind some of India's most prestigious interiors. Every sofa we create is a symphony of meticulously seasoned wood, hand-picked upholstery, and an obsessive attention to detail that only a master artisan can provide.
-              </p>
-              <p>
-                We don't just build furniture; we create heirlooms. From the intricate carvings of our Royal Heritage collection to the sleek lines of our Contemporary series, RESTEZ represents a legacy of excellence.
-              </p>
+            <h2 className="text-4xl font-playfair font-bold text-emerald mb-8 italic">{about.heading || 'The Artech Heritage'}</h2>
+            <div className="space-y-6 text-gray-600 font-montserrat leading-relaxed whitespace-pre-wrap">
+              {about.content}
             </div>
           </motion.div>
           <motion.div 
@@ -83,7 +92,7 @@ export default function AboutPage() {
             className="relative h-[500px] rounded-luxury overflow-hidden shadow-luxury-lg"
           >
             <img 
-              src="/sofas/sofa_emerald_velvet.png" 
+              src={about.image || "/sofas/sofa_emerald_velvet.png"} 
               alt="Craftsmanship" 
               className="w-full h-full object-cover"
             />

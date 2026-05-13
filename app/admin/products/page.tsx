@@ -8,12 +8,9 @@ import { Product } from '@/lib/supabase'
 
 const emptyForm = {
   name: '', slug: '', description: '',
-  base_price: '', premium_upcharge: '',
   category: 'Sofa', collection: '', material: '', style: '',
   seating_capacity: '3',
   dim_length: '', dim_width: '', dim_height: '',
-  standard_fabrics: 'Emerald Velvet, Burgundy Velvet',
-  premium_fabrics: 'Gold Silk Brocade, Royal Purple Silk',
   img_main: '', img_front: '', img_angle: '', img_side: '', img_back: '', img_closeup: '',
   in_stock: true, featured: false,
 }
@@ -41,7 +38,7 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState(emptyForm)
   const [fabricImages, setFabricImages] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
-  const [activeTab, setActiveTab] = useState<'basic' | 'images' | 'fabrics'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'images'>('basic')
   const [uploadingField, setUploadingField] = useState<string | null>(null)
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, isFabric: boolean = false) => {
@@ -94,8 +91,6 @@ export default function AdminProductsPage() {
       name: product.name,
       slug: product.slug,
       description: product.description,
-      base_price: String(product.base_price),
-      premium_upcharge: String(product.premium_upcharge),
       category: product.category,
       collection: product.collection,
       material: product.material,
@@ -104,8 +99,6 @@ export default function AdminProductsPage() {
       dim_length: String(product.dimensions.length),
       dim_width: String(product.dimensions.width),
       dim_height: String(product.dimensions.height),
-      standard_fabrics: product.fabric_options.standard.join(', '),
-      premium_fabrics: product.fabric_options.premium.join(', '),
       img_main: product.images.main,
       img_front: product.images.front,
       img_angle: product.images.angle_45,
@@ -131,8 +124,6 @@ export default function AdminProductsPage() {
       name: form.name,
       slug: form.slug || autoSlug(form.name),
       description: form.description,
-      base_price: Number(form.base_price) || 0,
-      premium_upcharge: Number(form.premium_upcharge) || 0,
       category: form.category,
       collection: form.collection,
       material: form.material,
@@ -143,10 +134,6 @@ export default function AdminProductsPage() {
         width: Number(form.dim_width) || 0,
         height: Number(form.dim_height) || 0,
       },
-      fabric_options: {
-        standard: form.standard_fabrics.split(',').map(s => s.trim()).filter(Boolean),
-        premium: form.premium_fabrics.split(',').map(s => s.trim()).filter(Boolean),
-      },
       images: {
         main: mainImg,
         front: form.img_front || mainImg,
@@ -156,7 +143,6 @@ export default function AdminProductsPage() {
         closeup: form.img_closeup || mainImg,
         lifestyle: [mainImg],
       },
-      fabric_images: fabricImages,
       in_stock: form.in_stock,
       featured: form.featured,
     }
@@ -175,9 +161,7 @@ export default function AdminProductsPage() {
         const updated = {
           ...updatedData,
           dimensions: typeof updatedData.dimensions === 'string' ? JSON.parse(updatedData.dimensions) : updatedData.dimensions,
-          fabric_options: typeof updatedData.fabric_options === 'string' ? JSON.parse(updatedData.fabric_options) : updatedData.fabric_options,
           images: typeof updatedData.images === 'string' ? JSON.parse(updatedData.images) : updatedData.images,
-          fabric_images: typeof updatedData.fabric_images === 'string' ? JSON.parse(updatedData.fabric_images || '{}') : (updatedData.fabric_images || {}),
         }
         setProducts(products.map(p => p.id === editProduct.id ? updated : p))
       } else {
@@ -193,9 +177,7 @@ export default function AdminProductsPage() {
         const created = {
           ...createdData,
           dimensions: typeof createdData.dimensions === 'string' ? JSON.parse(createdData.dimensions) : createdData.dimensions,
-          fabric_options: typeof createdData.fabric_options === 'string' ? JSON.parse(createdData.fabric_options) : createdData.fabric_options,
           images: typeof createdData.images === 'string' ? JSON.parse(createdData.images) : createdData.images,
-          fabric_images: typeof createdData.fabric_images === 'string' ? JSON.parse(createdData.fabric_images || '{}') : (createdData.fabric_images || {}),
           reviews: [],
         }
         setProducts([...products, created])
@@ -289,7 +271,6 @@ export default function AdminProductsPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-montserrat font-semibold text-gray-700 uppercase">Product</th>
-                <th className="px-6 py-4 text-left text-xs font-montserrat font-semibold text-gray-700 uppercase">Price</th>
                 <th className="px-6 py-4 text-left text-xs font-montserrat font-semibold text-gray-700 uppercase">Stock</th>
                 <th className="px-6 py-4 text-right text-xs font-montserrat font-semibold text-gray-700 uppercase">Actions</th>
               </tr>
@@ -309,7 +290,6 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-montserrat font-semibold">{formatPrice(product.base_price)}</td>
                   <td className="px-6 py-4">
                     <button
                       onClick={() => toggleStock(product.id)}
@@ -363,7 +343,7 @@ export default function AdminProductsPage() {
 
               {/* Tabs */}
               <div className="flex border-b border-gray-100">
-                {(['basic', 'images', 'fabrics'] as const).map(tab => (
+                {(['basic', 'images'] as const).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -372,7 +352,7 @@ export default function AdminProductsPage() {
                       : 'text-gray-400 hover:text-gray-600'
                       }`}
                   >
-                    {tab === 'basic' ? '📝 Details' : tab === 'images' ? '🖼️ Images' : '🎨 Fabrics'}
+                    {tab === 'basic' ? '📝 Details' : '🖼️ Images'}
                   </button>
                 ))}
               </div>
@@ -395,14 +375,6 @@ export default function AdminProductsPage() {
                       <div className="col-span-2">
                         <label className={labelCls}>Description *</label>
                         <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={3} placeholder="Describe the sofa..." className={`${inputCls} resize-none`} />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Base Price (₹) *</label>
-                        <input type="number" value={form.base_price} onChange={e => set('base_price', e.target.value)} placeholder="89999" className={inputCls} />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Premium Fabric Upcharge (₹)</label>
-                        <input type="number" value={form.premium_upcharge} onChange={e => set('premium_upcharge', e.target.value)} placeholder="25000" className={inputCls} />
                       </div>
                       <div>
                         <label className={labelCls}>Category *</label>
@@ -537,149 +509,12 @@ export default function AdminProductsPage() {
                     ))}
                   </div>
                 )}
-
-                {/* TAB: Fabrics */}
-                {activeTab === 'fabrics' && (() => {
-                  const allFabrics = [
-                    ...form.standard_fabrics.split(',').map(s => s.trim()).filter(Boolean).map(n => ({ name: n, tier: 'Standard' as const })),
-                    ...form.premium_fabrics.split(',').map(s => s.trim()).filter(Boolean).map(n => ({ name: n, tier: 'Premium' as const })),
-                  ]
-                  return (
-                    <div className="space-y-5">
-
-                      {/* Standard fabrics input */}
-                      <div>
-                        <label className={labelCls}>Standard Fabric Names <span className="text-gray-400 font-normal">(comma-separated)</span></label>
-                        <textarea
-                          value={form.standard_fabrics}
-                          onChange={e => set('standard_fabrics', e.target.value)}
-                          rows={2}
-                          placeholder="Emerald Velvet, Burgundy Velvet, Navy Blue Velvet"
-                          className={`${inputCls} resize-none`}
-                        />
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {form.standard_fabrics.split(',').filter(s => s.trim()).map(s => (
-                            <span key={s} className="inline-block bg-emerald/10 text-emerald text-xs px-2 py-0.5 rounded-full">{s.trim()}</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Premium fabrics input */}
-                      <div>
-                        <label className={labelCls}>Premium Fabric Names <span className="text-gray-400 font-normal">(comma-separated)</span></label>
-                        <textarea
-                          value={form.premium_fabrics}
-                          onChange={e => set('premium_fabrics', e.target.value)}
-                          rows={2}
-                          placeholder="Gold Silk Brocade, Royal Purple Silk"
-                          className={`${inputCls} resize-none`}
-                        />
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {form.premium_fabrics.split(',').filter(s => s.trim()).map(s => (
-                            <span key={s} className="inline-block bg-amber-50 text-amber-700 text-xs px-2 py-0.5 rounded-full">{s.trim()}</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Per-fabric image section — shows only when fabrics are defined */}
-                      {allFabrics.length > 0 && (
-                        <div className="border-t border-gray-100 pt-5">
-                          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
-                            <ImageIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="text-xs font-montserrat font-bold text-blue-700">Fabric-Specific Product Images</p>
-                              <p className="text-xs font-montserrat text-blue-600 mt-0.5 leading-relaxed">
-                                Upload the image for each fabric below. When a customer selects that fabric on the product page, they will see the exact photo — no colour filter.
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            {allFabrics.map(({ name, tier }) => (
-                              <div key={name} className="group">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-xs font-montserrat font-bold px-2 py-0.5 rounded-full ${
-                                    tier === 'Premium' ? 'bg-amber-50 text-amber-700' : 'bg-emerald/10 text-emerald'
-                                  }`}>{tier}</span>
-                                  <label className="text-sm font-montserrat font-semibold text-charcoal">{name}</label>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <label className={`flex-1 flex items-center justify-center border border-gray-300 bg-white rounded-luxury hover:bg-gray-50 transition-colors cursor-pointer py-2 px-3 text-sm ${uploadingField === `fabric_${name}` ? 'opacity-50 pointer-events-none' : ''}`}>
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={e => handleUpload(e, name, true)}
-                                      className="hidden"
-                                    />
-                                    {uploadingField === `fabric_${name}` ? (
-                                      <div className="flex items-center text-gray-500 font-montserrat">
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center text-gray-600 font-montserrat">
-                                        <Upload className="w-4 h-4 mr-2" /> 
-                                        {fabricImages[name] ? 'Replace Image' : 'Choose File'}
-                                      </div>
-                                    )}
-                                  </label>
-                                  {/* Live preview thumbnail */}
-                                  {fabricImages[name] ? (
-                                    <div
-                                      className="w-14 h-10 rounded-lg bg-cover bg-center border-2 border-emerald/30 flex-shrink-0 shadow-sm"
-                                      style={{ backgroundImage: `url(${fabricImages[name]})` }}
-                                      title={`Preview: ${name}`}
-                                    />
-                                  ) : (
-                                    <div className="w-14 h-10 rounded-lg border-2 border-dashed border-gray-200 flex-shrink-0 flex items-center justify-center bg-gray-50">
-                                      <ImageIcon className="w-4 h-4 text-gray-300" />
-                                    </div>
-                                  )}
-                                  {/* Clear button */}
-                                  {fabricImages[name] && (
-                                    <button
-                                      onClick={() => setFabricImages(prev => { const n = { ...prev }; delete n[name]; return n })}
-                                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                                      title="Clear image"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Summary: how many images filled */}
-                          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-2">
-                            <div className="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                              <div
-                                className="bg-emerald h-full rounded-full transition-all duration-500"
-                                style={{ width: `${allFabrics.length ? (Object.values(fabricImages).filter(Boolean).length / allFabrics.length) * 100 : 0}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-montserrat text-gray-500 flex-shrink-0">
-                              {Object.values(fabricImages).filter(Boolean).length} / {allFabrics.length} images added
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {allFabrics.length === 0 && (
-                        <div className="text-center py-8 text-gray-400">
-                          <ImageIcon className="w-10 h-10 mx-auto mb-2 text-gray-200" />
-                          <p className="text-sm font-montserrat">Add fabric names above to unlock per-fabric image uploads</p>
-                        </div>
-                      )}
-
-                    </div>
-                  )
-                })()}
               </div>
 
               {/* Footer */}
               <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
                 <div className="flex space-x-2">
-                  {(['basic', 'images', 'fabrics'] as const).map((tab, i) => (
+                  {(['basic', 'images'] as const).map((tab, i) => (
                     <button key={tab} onClick={() => setActiveTab(tab)} className={`w-2 h-2 rounded-full transition-colors ${activeTab === tab ? 'bg-emerald' : 'bg-gray-200'}`} />
                   ))}
                 </div>
@@ -689,7 +524,7 @@ export default function AdminProductsPage() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={!form.name || !form.base_price}
+                    disabled={!form.name}
                     className="px-6 py-2.5 bg-emerald hover:bg-emerald-light disabled:opacity-50 text-white rounded-luxury text-sm font-montserrat font-semibold transition-all flex items-center space-x-2"
                   >
                     {saved ? <><Check className="w-4 h-4" /><span>Saved!</span></> : <><span>{editProduct ? 'Save Changes' : 'Add Product'}</span></>}

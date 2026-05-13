@@ -19,102 +19,61 @@ declare global {
   }
 }
 
-// Removed static heroSlides - now fetching from CMS
-
-// Removed static fabricShowcase - now fetching from CMS
-
-const collections = [
-  {
-    name: 'Royal Heritage',
-    description: 'Traditional designs with ornate carvings',
-    image: '/sofas/sofa_emerald_velvet.png',
-    count: 12,
-  },
-  {
-    name: 'Imperial',
-    description: 'Chesterfield luxury, Indian craftsmanship',
-    image: '/sofas/chesterfield_navy.png',
-    count: 8,
-  },
-  {
-    name: 'Mughal Series',
-    description: 'Ornate loveseats, bridal elegance',
-    image: '/sofas/loveseat_rose_pink.png',
-    count: 6,
-  },
-  {
-    name: 'Contemporary',
-    description: 'Clean lines, modern aesthetics',
-    image: '/sofas/sofa_charcoal_grey.png',
-    count: 18,
-  },
-]
 
 const trustFeatures = [
-  { icon: Award,  title: 'Premium Quality',       description: 'Handcrafted by Artech Furniture master artisans' },
-  { icon: Truck,  title: 'India-Wide Delivery',   description: 'Free shipping on orders above ₹50,000' },
+  { icon: Award,  title: 'Premium Quality',       description: 'Built by Artech Furniture master artisans' },
+  { icon: Truck,  title: 'India-Wide Delivery',   description: 'Reliable and safe shipping' },
   { icon: Shield, title: '5-Year Warranty',        description: 'Complete peace of mind on all products' },
   { icon: Users,  title: '10,000+ Happy Homes',   description: 'Join our family of satisfied customers' },
 ]
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide]       = useState(0)
-  const [activeFabric, setActiveFabric]        = useState(0)
   const [modelLoaded, setModelLoaded]          = useState(false)
   const [modelError, setModelError]            = useState(false)
   const [isModelViewerReady, setModelViewerReady] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // CMS state (pre-filled with default to prevent gray box during load)
-  const [heroSlides, setHeroSlides] = useState<any[]>([
-    {
-      title: 'Royal Heritage Collection',
-      subtitle: 'Timeless Elegance Meets Modern Comfort',
-      image: '/sofas/sofa_emerald_velvet.png',
-      cta: 'Explore Collection',
-      link: '/products'
-    }
-  ])
+  // CMS state
+  const [heroSlides, setHeroSlides] = useState<any[]>([])
   const [heroInterval, setHeroInterval] = useState(5000)
-  const [fabrics, setFabrics] = useState<any[]>([
-    { name: 'Emerald Velvet',   img: '/sofas/sofa_emerald_velvet.png',   color: '#1a6b4a' },
-    { name: 'Burgundy Velvet',  img: '/sofas/sofa_burgundy_velvet.png',  color: '#7c1f38' },
-    { name: 'Navy Blue Velvet', img: '/sofas/sofa_navy_velvet.png',      color: '#1a2f6b' },
-    { name: 'Gold Silk',        img: '/sofas/sofa_gold_silk.png',        color: '#b5860d' },
-    { name: 'Charcoal Grey',    img: '/sofas/sofa_charcoal_grey.png',    color: '#3d3d3d' },
-    { name: 'Royal Purple',     img: '/sofas/sofa_royal_purple.png',     color: '#6b21a8' },
-    { name: 'Ivory Cream',      img: '/sofas/sofa_ivory_cream.png',      color: '#c8b48a' },
-    { name: 'Terracotta',       img: '/sofas/sofa_terracotta.png',       color: '#c1440e' },
-  ])
+  const [videoGallery, setVideoGallery] = useState<any[]>([])
   const [cmsLoading, setCmsLoading] = useState(true)
-
-  // Fetch CMS Data
+  const [dynamicCollections, setDynamicCollections] = useState<any[]>([])
   useEffect(() => {
     Promise.all([
       fetch('/api/cms?key=homepage_carousel'),
-      fetch('/api/cms?key=homepage_fabrics')
+      fetch('/api/cms?key=video_gallery')
     ])
-      .then(async ([res1, res2]) => {
+      .then(async ([res1, res3]) => {
         const data1 = await res1.json()
-        const data2 = await res2.json()
+        const data3 = await res3.json()
 
-        if (data1.success && data1.data) {
-          setHeroSlides(data1.data.slides || [])
+        if (data1.success && data1.data && data1.data.slides?.length > 0) {
+          setHeroSlides(data1.data.slides)
           setHeroInterval(data1.data.interval || 5000)
-        } else {
-          setHeroSlides([
-            {
-              title: 'Royal Heritage Collection',
-              subtitle: 'Timeless Elegance Meets Modern Comfort',
-              image: '/sofas/sofa_emerald_velvet.png',
-              cta: 'Explore Collection',
-              link: '/products'
-            }
-          ])
         }
 
-        if (data2.success && data2.data && data2.data.length > 0) {
-          setFabrics(data2.data)
+        if (data3.success && data3.data && data3.data.videos) {
+          setVideoGallery(data3.data.videos)
+        } else {
+          setVideoGallery([
+            {
+              title: "The bespoke Imperial Chesterfield completely elevated our living room. The craftsmanship is flawless.",
+              url: "https://www.youtube.com/watch?v=123",
+              thumbnail: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800",
+            },
+            {
+              title: "From ordering to the delivery, the experience was premium. The sofa is incredibly comfortable.",
+              url: "https://www.youtube.com/watch?v=456",
+              thumbnail: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800",
+            },
+            {
+              title: "Finding a piece that blends modern aesthetics with traditional Indian quality was hard, until we found Restez.",
+              url: "https://www.youtube.com/watch?v=789",
+              thumbnail: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800",
+            }
+          ])
         }
       })
       .catch(err => {
@@ -123,17 +82,42 @@ export default function HomePage() {
       .finally(() => setCmsLoading(false))
   }, [])
 
-  // ── Auto-fetch featured products from database ───────────────────
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([])
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          // Show featured first, then fill up to 6 total
           const featured = data.filter((p: any) => p.featured)
           const rest = data.filter((p: any) => !p.featured)
-          setFeaturedProducts([...featured, ...rest].slice(0, 6))
+          const toShow = [...featured, ...rest]
+          setFeaturedProducts(toShow.slice(0, 6))
+          
+          setHeroSlides(prev => {
+            if (prev.length > 0) return prev
+            return toShow.slice(0, 3).map(p => {
+               const images = typeof p.images === 'string' ? JSON.parse(p.images) : p.images
+               return {
+                 title: p.name,
+                 subtitle: p.description?.substring(0, 100) || '',
+                 image: images?.main || '',
+                 cta: 'View Details',
+                 link: `/products/${p.slug}`
+               }
+            })
+          })
+          
+          const uniqueCollections = Array.from(new Set(data.map(p => p.collection || p.category))).filter(Boolean)
+          const dynamicCols = uniqueCollections.slice(0, 4).map(cName => {
+             const product = data.find(p => (p.collection === cName || p.category === cName))
+             const images = typeof product?.images === 'string' ? JSON.parse(product.images) : product?.images
+             return {
+                name: cName,
+                description: `Explore our ${cName} collection`,
+                image: images?.main || ''
+             }
+          })
+          setDynamicCollections(dynamicCols)
         }
       })
       .catch(() => {})
@@ -166,6 +150,7 @@ export default function HomePage() {
   return (
     <div className="bg-white">
       {/* ── Editorial Hero Slider ────────────────────────────────────────── */}
+      {heroSlides.length > 0 && (
       <section className="relative min-h-[90vh] bg-[#FCFCFA] flex items-center overflow-hidden pt-28 pb-16">
         {/* Subtle background texture/glow */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald/5 rounded-full blur-[120px] pointer-events-none transform translate-x-1/3 -translate-y-1/4" />
@@ -253,144 +238,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* ── 3D / Interactive Sofa Showcase ─────────────────────────── */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-[#0d1f1a] to-[#0a1710] overflow-hidden relative">
-        {/* Decorative bokeh circles */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gold/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-10"
-          >
-            <p className="text-gold font-montserrat text-xs tracking-[0.35em] uppercase mb-3">Interactive Preview</p>
-            <h2 className="text-3xl md:text-5xl font-playfair font-bold text-white mb-3">
-              Choose Your Fabric
-            </h2>
-            <p className="text-white/60 font-montserrat text-base max-w-xl mx-auto">
-              Every sofa is available in 8 premium fabrics. Watch it transform in real time.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {/* Left: 3D model-viewer or photo showcase */}
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              {/* Glow ring */}
-              <div
-                className="absolute inset-0 rounded-3xl blur-2xl opacity-30 transition-colors duration-700"
-                style={{ backgroundColor: fabrics[activeFabric]?.color }}
-              />
-
-              <div className="relative bg-white/5 backdrop-blur-sm rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-[4/3]">
-                {/* Premium animated photo carousel */}
-                <div className="relative w-full h-full overflow-hidden group">
-                  <AnimatePresence>
-                    <motion.img
-                      key={`fabric-img-${activeFabric}`}
-                      src={fabrics[activeFabric]?.img}
-                      alt={fabrics[activeFabric]?.name}
-                      initial={{ opacity: 0, scale: 1.05 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.8, ease: "easeInOut" }}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </AnimatePresence>
-                  {/* Floating badge */}
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm text-white text-xs font-montserrat font-semibold px-3 py-1.5 rounded-full border border-white/20 z-10">
-                    ✦ {fabrics[activeFabric]?.name}
-                  </div>
-                  
-                  {/* Animated Progress Bar */}
-                  {fabrics.length > 0 && (
-                    <motion.div
-                      key={`progress-${activeFabric}`}
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 3.5, ease: "linear" }}
-                      onAnimationComplete={() => setActiveFabric(p => (p + 1) % fabrics.length)}
-                      className="absolute bottom-0 left-0 h-1 bg-gold z-20 shadow-[0_0_10px_rgba(200,180,138,0.8)]"
-                    />
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right: fabric swatch picker */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.15 }}
-            >
-              <h3 className="text-2xl font-playfair font-bold text-white mb-2">
-                {fabrics[activeFabric]?.name}
-              </h3>
-              <p className="text-white/50 font-montserrat text-sm mb-6">
-                Tap any swatch to preview the fabric. Visit a product page to customise and order.
-              </p>
-
-              {/* Swatch grid */}
-              <div className="grid grid-cols-4 gap-3 mb-8">
-                {fabrics.map((fab, i) => (
-                  <button
-                    key={fab.name}
-                    onClick={() => setActiveFabric(i)}
-                    title={fab.name}
-                    className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                      i === activeFabric
-                        ? 'border-gold scale-105 shadow-lg shadow-gold/30'
-                        : 'border-white/10 hover:border-white/40 hover:scale-105'
-                    }`}
-                  >
-                    <img src={fab.img} alt={fab.name} className="w-full h-full object-cover" />
-                    <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-1.5 transition-opacity ${i === activeFabric ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                      <span className="text-[9px] text-white font-montserrat font-semibold leading-tight">{fab.name}</span>
-                    </div>
-                    {i === activeFabric && (
-                      <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-gold rounded-full shadow-md" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Colour dot strip */}
-              <div className="flex items-center gap-2 mb-8">
-                {fabrics.map((fab, i) => (
-                  <button
-                    key={fab.name}
-                    onClick={() => setActiveFabric(i)}
-                    className={`rounded-full border-2 transition-all duration-300 ${
-                      i === activeFabric ? 'w-8 h-5 border-gold' : 'w-5 h-5 border-transparent hover:border-white/40'
-                    }`}
-                    style={{ backgroundColor: fab.color }}
-                    title={fab.name}
-                  />
-                ))}
-              </div>
-
-              <Link
-                href="/products"
-                className="inline-flex items-center space-x-2 bg-gold hover:bg-gold-light text-white px-7 py-3.5 rounded-luxury font-montserrat font-semibold transition-all duration-300 shadow-luxury hover:shadow-gold-glow group"
-              >
-                <span>Browse All Products</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
 
       {/* ── Featured Products (auto-loaded from database) ────────── */}
       {featuredProducts.length > 0 && (
@@ -407,7 +256,7 @@ export default function HomePage() {
                 Featured Products
               </h2>
               <p className="text-gray-500 font-montserrat max-w-xl mx-auto">
-                Handcrafted luxury sofas, ready to transform your living space
+                Premium luxury furniture, ready to transform your living space
               </p>
             </motion.div>
 
@@ -462,9 +311,6 @@ export default function HomePage() {
                           </div>
                         )}
                         <div className="flex items-center justify-between">
-                          <p className="text-xl font-playfair font-bold text-emerald">
-                            {formatPrice(product.base_price)}
-                          </p>
                           <span className="text-xs font-montserrat text-emerald font-semibold group-hover:underline flex items-center gap-1">
                             View Details <ArrowRight className="w-3 h-3" />
                           </span>
@@ -508,7 +354,7 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {collections.map((collection, index) => (
+            {dynamicCollections.map((collection, index) => (
               <motion.div
                 key={collection.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -536,7 +382,7 @@ export default function HomePage() {
                       {collection.description}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-montserrat text-gold">{collection.count} Products</span>
+                      <span className="text-xs font-montserrat text-gold">Explore</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </div>
@@ -597,7 +443,7 @@ export default function HomePage() {
                 See Why 10,000+ Homeowners Choose RESTEZ
               </h2>
               <p className="text-lg text-gray-600 font-montserrat">
-                Hear it from our clients who transformed their living spaces with handcrafted luxury.
+                Hear it from our clients who transformed their living spaces with premium luxury.
               </p>
             </motion.div>
             <motion.div
@@ -615,33 +461,20 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "The bespoke Imperial Chesterfield completely elevated our living room. The craftsmanship is flawless and beyond our expectations.",
-                names: "Arjun & Priya, Delhi",
-                img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800",
-              },
-              {
-                quote: "From ordering to the white-glove delivery, the experience was premium. The sofa is incredibly comfortable and looks stunning.",
-                names: "Neha Sharma, Mumbai",
-                img: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=800",
-              },
-              {
-                quote: "Finding a piece that blends modern aesthetics with traditional Indian quality was hard, until we found Restez.",
-                names: "Vikram & Ananya, Bangalore",
-                img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800",
-              }
-            ].map((testimonial, i) => (
+            {videoGallery.map((video, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="group relative rounded-2xl overflow-hidden shadow-luxury bg-white border border-gray-100"
+                className="group relative rounded-2xl overflow-hidden shadow-luxury bg-white border border-gray-100 block cursor-pointer"
+                onClick={() => window.open(video.url, '_blank')}
               >
-                <div className="relative aspect-video w-full overflow-hidden">
-                  <img src={testimonial.img} alt="Client Home" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                  {video.thumbnail && (
+                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  )}
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                     <button className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald hover:bg-white transition-all hover:scale-110 shadow-xl">
                       <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
@@ -650,10 +483,7 @@ export default function HomePage() {
                 </div>
                 <div className="p-8">
                   <p className="text-gray-700 font-montserrat italic leading-relaxed mb-6">
-                    "{testimonial.quote}"
-                  </p>
-                  <p className="text-emerald font-semibold font-montserrat text-sm uppercase tracking-wider">
-                    {testimonial.names}
+                    {video.title}
                   </p>
                 </div>
               </motion.div>
@@ -714,7 +544,7 @@ export default function HomePage() {
               Ready to Transform Your Living Space?
             </h2>
             <p className="text-lg text-gray-600 font-montserrat mb-8">
-              Explore our complete range of handcrafted luxury sofas — each made to order
+              Explore our complete range of premium luxury furniture — each made to order
             </p>
             <Link
               href="/products"

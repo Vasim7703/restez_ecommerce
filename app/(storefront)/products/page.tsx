@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import { useFilterStore, useCompareStore } from '@/lib/store'
-import { formatPrice } from '@/lib/utils'
 import { Product } from '@/lib/supabase'
 
 // Dot colours for fabric name → swatch dot background colour
@@ -68,19 +67,15 @@ export default function ProductsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string>('All')
   const [expandedFilters, setExpandedFilters] = useState({
-
-    price: true,
     material: true,
     seating: true,
     style: true,
   })
 
   const {
-    priceRange,
     materials,
     seatingCapacity,
     styles,
-    setPriceRange,
     toggleMaterial,
     toggleSeatingCapacity,
     toggleStyle,
@@ -106,12 +101,11 @@ export default function ProductsPage() {
 
   // Filter products
   const filteredProducts = Array.isArray(products) ? products.filter((product) => {
-    const priceMatch = product.base_price >= priceRange[0] && product.base_price <= priceRange[1]
     const materialMatch = materials.length === 0 || materials.includes(product.material)
     const seatingMatch = seatingCapacity.length === 0 || seatingCapacity.includes(product.seating_capacity)
     const styleMatch = styles.length === 0 || styles.includes(product.style)
     const categoryMatch = activeCategory === 'All' || product.category === activeCategory
-    return priceMatch && materialMatch && seatingMatch && styleMatch && categoryMatch
+    return materialMatch && seatingMatch && styleMatch && categoryMatch
   }) : []
 
   // Unique categories from all fetched products
@@ -164,25 +158,6 @@ export default function ProductsPage() {
           Clear All
         </button>
       </div>
-
-      {/* Price Range */}
-      <FilterSection title="Price Range" section="price">
-        <div className="space-y-3">
-          <input
-            type="range"
-            min="0"
-            max="500000"
-            step="10000"
-            value={priceRange[1]}
-            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-            className="w-full accent-emerald"
-          />
-          <div className="flex items-center justify-between text-sm font-montserrat">
-            <span className="text-gray-600">{formatPrice(priceRange[0])}</span>
-            <span className="text-emerald font-semibold">{formatPrice(priceRange[1])}</span>
-          </div>
-        </div>
-      </FilterSection>
 
       {/* Material */}
       <FilterSection title="Material" section="material">
@@ -386,11 +361,11 @@ export default function ProductsPage() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-playfair font-bold text-emerald">
-                            {formatPrice(product.base_price)}
-                          </p>
-                          <p className="text-xs text-gray-500 font-montserrat">
+                          <p className="text-xs text-gray-500 font-montserrat mt-1">
                             {product.seating_capacity} Seater • {product.material}
+                          </p>
+                          <p className="text-sm font-montserrat font-bold text-emerald flex items-center gap-1 mt-2 hover:underline">
+                            View Details →
                           </p>
                         </div>
 

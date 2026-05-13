@@ -6,13 +6,11 @@ import { motion } from 'framer-motion'
 import { Star, Filter, SlidersHorizontal, Search } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
 import { Product } from '@/lib/supabase'
-import { formatPrice } from '@/lib/utils'
 
 function SearchPageContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
 
-  const [priceFilter, setPriceFilter] = useState<string>('all')
   const [ratingFilter, setRatingFilter] = useState<number>(0)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
@@ -40,11 +38,6 @@ function SearchPageContent() {
     p.description.toLowerCase().includes(query.toLowerCase()) ||
     p.collection.toLowerCase().includes(query.toLowerCase())
   )
-
-  // Apply Price Filter
-  if (priceFilter === 'under50k') results = results.filter(p => p.base_price < 50000)
-  if (priceFilter === '50k-100k') results = results.filter(p => p.base_price >= 50000 && p.base_price <= 100000)
-  if (priceFilter === 'over100k') results = results.filter(p => p.base_price > 100000)
 
   // Apply Rating Filter
   if (ratingFilter > 0) {
@@ -91,33 +84,6 @@ function SearchPageContent() {
           <aside className={`w-full lg:w-64 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
             <div className="bg-white p-6 rounded-luxury shadow-sm space-y-8 sticky top-24">
               
-              {/* Category Filter */}
-              <div>
-                <h3 className="font-montserrat font-bold text-charcoal mb-3 flex items-center space-x-2">
-                  <Filter className="w-4 h-4 text-emerald" />
-                  <span>Price Range</span>
-                </h3>
-                <div className="space-y-2">
-                  {[
-                    { id: 'all', label: 'Any Price' },
-                    { id: 'under50k', label: 'Under ₹50,000' },
-                    { id: '50k-100k', label: '₹50,000 - ₹1,00,000' },
-                    { id: 'over100k', label: 'Over ₹1,00,000' }
-                  ].map(filter => (
-                    <label key={filter.id} className="flex items-center space-x-2 cursor-pointer group">
-                      <input 
-                        type="radio" 
-                        name="price"
-                        checked={priceFilter === filter.id}
-                        onChange={() => setPriceFilter(filter.id)}
-                        className="w-4 h-4 text-emerald bg-gray-100 border-gray-300 focus:ring-emerald cursor-pointer" 
-                      />
-                      <span className="text-sm font-montserrat text-gray-600 group-hover:text-emerald transition-colors">{filter.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
               {/* Rating Filter */}
               <div>
                 <h3 className="font-montserrat font-bold text-charcoal mb-3">Customer Reviews</h3>
@@ -187,22 +153,10 @@ function SearchPageContent() {
                             {product.name}
                           </h3>
                           <div className="flex items-center space-x-1 mt-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                className={`w-3.5 h-3.5 ${i < Math.round(avgRating) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'}`} 
-                              />
-                            ))}
-                            <span className="text-xs text-emerald font-montserrat font-semibold ml-1">
-                              {product.reviews ? product.reviews.length : 0} reviews
-                            </span>
+                            <p className="text-xs font-montserrat text-gray-500 line-clamp-1">
+                              {product.material} • {product.seating_capacity} Seater
+                            </p>
                           </div>
-                          <p className="text-xl font-montserrat font-bold text-charcoal mb-1">
-                            {formatPrice(product.base_price)}
-                          </p>
-                          <p className="text-xs font-montserrat text-gray-500 line-clamp-1">
-                            {product.material} • {product.seating_capacity} Seater
-                          </p>
                         </Link>
                         
                         <div className="mt-4 pt-4 border-t border-gray-100">

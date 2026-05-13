@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react'
 
@@ -13,6 +13,29 @@ export default function ContactPage() {
     message: ''
   })
   const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle')
+
+  const [contactInfo, setContactInfo] = useState({
+    email: 'concierge@restez.in \n support@artechfurniture.com',
+    phone: '+91 98765 43210 \n Mon - Sat: 10:00 AM - 7:00 PM',
+    address: 'Plot No. 45, Artech Avenue, \n Industrial Area Phase II, \n Jodhpur, Rajasthan - 342001',
+    whatsapp: '+91 9876543210'
+  })
+
+  useEffect(() => {
+    fetch('/api/cms?key=contact_details')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setContactInfo({
+            email: data.data.email || contactInfo.email,
+            phone: data.data.phone || contactInfo.phone,
+            address: data.data.address || contactInfo.address,
+            whatsapp: data.data.whatsapp || contactInfo.whatsapp
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,10 +84,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-playfair font-bold text-charcoal">Flagship Gallery</h3>
-                    <p className="text-gray-500 font-montserrat text-sm mt-1">
-                      Plot No. 45, Artech Avenue, <br />
-                      Industrial Area Phase II, <br />
-                      Jodhpur, Rajasthan - 342001
+                    <p className="text-gray-500 font-montserrat text-sm mt-1 whitespace-pre-wrap">
+                      {contactInfo.address}
                     </p>
                   </div>
                 </div>
@@ -75,9 +96,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-playfair font-bold text-charcoal">Concierge Service</h3>
-                    <p className="text-gray-500 font-montserrat text-sm mt-1">
-                      +91 98765 43210 <br />
-                      Mon - Sat: 10:00 AM - 7:00 PM
+                    <p className="text-gray-500 font-montserrat text-sm mt-1 whitespace-pre-wrap">
+                      {contactInfo.phone}
                     </p>
                   </div>
                 </div>
@@ -88,9 +108,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-playfair font-bold text-charcoal">Email Us</h3>
-                    <p className="text-gray-500 font-montserrat text-sm mt-1">
-                      concierge@restez.in <br />
-                      support@artechfurniture.com
+                    <p className="text-gray-500 font-montserrat text-sm mt-1 whitespace-pre-wrap">
+                      {contactInfo.email}
                     </p>
                   </div>
                 </div>

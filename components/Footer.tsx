@@ -23,7 +23,7 @@ export default function Footer() {
               BY ARTECH FURNITURE
             </p>
             <p className="text-sm text-white/80 leading-relaxed">
-              Handcrafted luxury sofas that blend traditional Indian artistry with contemporary design excellence.
+              Premium luxury sofas that blend traditional Indian artistry with contemporary design excellence.
             </p>
           </div>
 
@@ -58,7 +58,7 @@ export default function Footer() {
               Customer Service
             </h4>
             <ul className="space-y-2">
-              {['Shipping & Delivery', 'Returns & Exchange', 'Warranty', 'Care Guide', 'Customization'].map((item) => (
+              {['Shipping & Delivery', 'Returns & Exchange', 'Warranty', 'Care Guide'].map((item) => (
                 <li key={item}>
                   <Link
                     href="#"

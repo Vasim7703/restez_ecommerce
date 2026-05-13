@@ -60,13 +60,29 @@ export default function AdminOrdersPage() {
   }, [])
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    // Save previous state for rollback
+    const previousOrders = [...orders]
+    
     // Optimistic UI update
     setOrders(orders.map(order =>
       order.id === orderId ? { ...order, status: newStatus } : order
     ))
 
-    // Optional: Call an API endpoint here to actually save the status to the DB
-    // await fetch(`/api/orders/${orderId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) })
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (!res.ok) {
+        throw new Error('Failed to update status')
+      }
+    } catch (err) {
+      console.error('Failed to update order status in DB', err)
+      // Revert on failure
+      setOrders(previousOrders)
+      alert('Failed to update order status. Please try again.')
+    }
   }
 
   const filteredOrders = orders.filter((order) =>

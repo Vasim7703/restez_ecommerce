@@ -13,7 +13,11 @@ export default function CMSPage() {
 
   const [interval, setIntervalTime] = useState(5000)
   const [slides, setSlides] = useState<any[]>([])
-  const [fabrics, setFabrics] = useState<any[]>([])
+  const [videos, setVideos] = useState<any[]>([])
+  const [contact, setContact] = useState({ email: '', phone: '', address: '', whatsapp: '' })
+  const [about, setAbout] = useState({ heading: '', content: '', image: '' })
+
+  const [activeTab, setActiveTab] = useState<'homepage' | 'videos' | 'contact' | 'about'>('homepage')
 
   useEffect(() => {
     fetchCMS()
@@ -21,42 +25,32 @@ export default function CMSPage() {
 
   const fetchCMS = async () => {
     try {
-      const [carouselRes, fabricsRes] = await Promise.all([
+      const [carouselRes, videoRes, contactRes, aboutRes] = await Promise.all([
         fetch('/api/cms?key=homepage_carousel'),
-        fetch('/api/cms?key=homepage_fabrics')
+        fetch('/api/cms?key=video_gallery'),
+        fetch('/api/cms?key=contact_details'),
+        fetch('/api/cms?key=about_page')
       ])
 
       const carouselData = await carouselRes.json()
       if (carouselRes.ok && carouselData.data) {
         setIntervalTime(carouselData.data.interval || 5000)
         setSlides(carouselData.data.slides || [])
-      } else {
-        // Defaults if none exist
-        setSlides([
-          {
-            title: 'Royal Heritage Collection',
-            subtitle: 'Timeless Elegance Meets Modern Comfort',
-            image: '/sofas/sofa_emerald_velvet.png',
-            cta: 'Explore Collection',
-            link: '/products'
-          }
-        ])
       }
 
-      const fabricsData = await fabricsRes.json()
-      if (fabricsRes.ok && fabricsData.data) {
-        setFabrics(fabricsData.data || [])
-      } else {
-        setFabrics([
-          { name: 'Emerald Velvet',   img: '/sofas/sofa_emerald_velvet.png',   color: '#1a6b4a' },
-          { name: 'Burgundy Velvet',  img: '/sofas/sofa_burgundy_velvet.png',  color: '#7c1f38' },
-          { name: 'Navy Blue Velvet', img: '/sofas/sofa_navy_velvet.png',      color: '#1a2f6b' },
-          { name: 'Gold Silk',        img: '/sofas/sofa_gold_silk.png',        color: '#b5860d' },
-          { name: 'Charcoal Grey',    img: '/sofas/sofa_charcoal_grey.png',    color: '#3d3d3d' },
-          { name: 'Royal Purple',     img: '/sofas/sofa_royal_purple.png',     color: '#6b21a8' },
-          { name: 'Ivory Cream',      img: '/sofas/sofa_ivory_cream.png',      color: '#c8b48a' },
-          { name: 'Terracotta',       img: '/sofas/sofa_terracotta.png',       color: '#c1440e' },
-        ])
+      const videoData = await videoRes.json()
+      if (videoRes.ok && videoData.data) {
+        setVideos(videoData.data.videos || [])
+      }
+
+      const contactData = await contactRes.json()
+      if (contactRes.ok && contactData.data) {
+        setContact(contactData.data)
+      }
+
+      const aboutData = await aboutRes.json()
+      if (aboutRes.ok && aboutData.data) {
+        setAbout(aboutData.data)
       }
     } catch (err) {
       console.error(err)
@@ -70,7 +64,7 @@ export default function CMSPage() {
     setError('')
     setSuccess('')
     try {
-      const [res1, res2] = await Promise.all([
+      const responses = await Promise.all([
         fetch('/api/cms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,11 +73,21 @@ export default function CMSPage() {
         fetch('/api/cms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: 'homepage_fabrics', data: fabrics })
+          body: JSON.stringify({ key: 'video_gallery', data: { videos } })
+        }),
+        fetch('/api/cms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'contact_details', data: contact })
+        }),
+        fetch('/api/cms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'about_page', data: about })
         })
       ])
       
-      if (!res1.ok || !res2.ok) throw new Error('Failed to save CMS config')
+      if (responses.some(res => !res.ok)) throw new Error('Failed to save some CMS config')
       
       setSuccess('CMS updated successfully!')
       setTimeout(() => setSuccess(''), 3000)
@@ -108,18 +112,18 @@ export default function CMSPage() {
     setSlides(newSlides)
   }
 
-  const addFabric = () => {
-    setFabrics([...fabrics, { name: '', img: '', color: '#000000' }])
+  const addVideo = () => {
+    setVideos([...videos, { title: '', url: '', thumbnail: '' }])
   }
 
-  const removeFabric = (index: number) => {
-    setFabrics(fabrics.filter((_, i) => i !== index))
+  const removeVideo = (index: number) => {
+    setVideos(videos.filter((_, i) => i !== index))
   }
 
-  const updateFabric = (index: number, field: string, value: string) => {
-    const newFabrics = [...fabrics]
-    newFabrics[index] = { ...newFabrics[index], [field]: value }
-    setFabrics(newFabrics)
+  const updateVideo = (index: number, field: string, value: string) => {
+    const newVideos = [...videos]
+    newVideos[index] = { ...newVideos[index], [field]: value }
+    setVideos(newVideos)
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number, type: 'slide' | 'fabric') => {
@@ -142,8 +146,10 @@ export default function CMSPage() {
 
       if (type === 'slide') {
         updateSlide(index, 'image', data.url)
-      } else {
-        updateFabric(index, 'img', data.url)
+      } else if (type === 'video_thumbnail') {
+        updateVideo(index, 'thumbnail', data.url)
+      } else if (type === 'about') {
+        setAbout({ ...about, image: data.url })
       }
     } catch (err: any) {
       setError(err.message)
@@ -163,6 +169,20 @@ export default function CMSPage() {
         </div>
       </div>
 
+      <div className="flex space-x-4 mb-8 border-b border-gray-200">
+        {(['homepage', 'videos', 'contact', 'about'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`pb-4 px-2 font-montserrat font-bold capitalize transition-colors border-b-2 ${
+              activeTab === tab ? 'border-emerald text-emerald' : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {tab.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
       {/* Floating Save Button */}
       <div className="fixed bottom-8 right-8 z-50">
         <button
@@ -178,119 +198,173 @@ export default function CMSPage() {
       {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-luxury border border-red-100">{error}</div>}
       {success && <div className="mb-4 p-4 bg-emerald/10 text-emerald rounded-luxury border border-emerald/20 font-semibold">{success}</div>}
 
-      <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
-        <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">Homepage Carousel</h2>
-        
-        <div className="mb-10 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Slide Timer (Milliseconds)</label>
-          <input
-            type="number"
-            value={interval}
-            onChange={e => setIntervalTime(parseInt(e.target.value) || 5000)}
-            className="w-48 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald outline-none font-montserrat shadow-sm"
-          />
-          <p className="text-xs text-gray-500 mt-2">Example: 5000 = 5 seconds</p>
-        </div>
+      {activeTab === 'homepage' && (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">Homepage Carousel</h2>
+          
+          <div className="mb-10 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Slide Timer (Milliseconds)</label>
+            <input
+              type="number"
+              value={interval}
+              onChange={e => setIntervalTime(parseInt(e.target.value) || 5000)}
+              className="w-48 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald outline-none font-montserrat shadow-sm"
+            />
+            <p className="text-xs text-gray-500 mt-2">Example: 5000 = 5 seconds</p>
+          </div>
 
-        <div className="space-y-6">
-          {slides.map((slide, i) => (
-            <div key={i} className="flex flex-col space-y-6 p-8 bg-gray-50 border border-gray-200 rounded-[2rem] relative transition-all hover:shadow-md">
-              <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-playfair font-bold text-emerald">Slide {i + 1}</h3>
-                <button onClick={() => removeSlide(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
-                  <input type="text" value={slide.title} onChange={e => updateSlide(i, 'title', e.target.value)} placeholder="Royal Heritage Collection" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+          <div className="space-y-6">
+            {slides.map((slide, i) => (
+              <div key={i} className="flex flex-col space-y-6 p-8 bg-gray-50 border border-gray-200 rounded-[2rem] relative transition-all hover:shadow-md">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+                  <h3 className="text-lg font-playfair font-bold text-emerald">Slide {i + 1}</h3>
+                  <button onClick={() => removeSlide(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subtitle</label>
-                  <input type="text" value={slide.subtitle} onChange={e => updateSlide(i, 'subtitle', e.target.value)} placeholder="Timeless Elegance Meets Modern Comfort" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Image</label>
-                  <div className="flex items-center space-x-4">
-                    <input type="text" value={slide.image} onChange={e => updateSlide(i, 'image', e.target.value)} placeholder="/sofas/sofa_emerald_velvet.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-                    <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
-                      {uploading ? '...' : 'Upload'}
-                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, i, 'slide')} className="hidden" />
-                    </label>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+                    <input type="text" value={slide.title} onChange={e => updateSlide(i, 'title', e.target.value)} placeholder="Royal Heritage Collection" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Subtitle</label>
+                    <input type="text" value={slide.subtitle} onChange={e => updateSlide(i, 'subtitle', e.target.value)} placeholder="Timeless Elegance Meets Modern Comfort" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Image</label>
+                    <div className="flex items-center space-x-4">
+                      <input type="text" value={slide.image} onChange={e => updateSlide(i, 'image', e.target.value)} placeholder="/sofas/sofa_emerald_velvet.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                      <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
+                        {uploading ? '...' : 'Upload'}
+                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, i, 'slide' as any)} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Button Text</label>
+                    <input type="text" value={slide.cta} onChange={e => updateSlide(i, 'cta', e.target.value)} placeholder="Explore Collection" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Button Link URL</label>
+                    <input type="text" value={slide.link} onChange={e => updateSlide(i, 'link', e.target.value)} placeholder="/products" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Button Text</label>
-                  <input type="text" value={slide.cta} onChange={e => updateSlide(i, 'cta', e.target.value)} placeholder="Explore Collection" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addSlide}
+            className="mt-8 flex items-center justify-center space-x-2 w-full py-4 border-2 border-dashed border-emerald/50 text-emerald hover:bg-emerald/5 rounded-[2rem] font-montserrat font-semibold transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add New Slide</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'videos' && (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">Video Gallery</h2>
+          
+          <div className="space-y-6">
+            {videos.map((video, i) => (
+              <div key={i} className="flex flex-col space-y-6 p-8 bg-gray-50 border border-gray-200 rounded-[2rem] relative transition-all hover:shadow-md">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+                  <h3 className="text-lg font-playfair font-bold text-emerald">Video {i + 1}</h3>
+                  <button onClick={() => removeVideo(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Button Link URL</label>
-                  <input type="text" value={slide.link} onChange={e => updateSlide(i, 'link', e.target.value)} placeholder="/products" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+                    <input type="text" value={video.title} onChange={e => updateVideo(i, 'title', e.target.value)} placeholder="Video Title" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">YouTube URL</label>
+                    <input type="text" value={video.url} onChange={e => updateVideo(i, 'url', e.target.value)} placeholder="https://youtube.com/..." className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Thumbnail Image (Optional)</label>
+                    <div className="flex items-center space-x-4">
+                      <input type="text" value={video.thumbnail} onChange={e => updateVideo(i, 'thumbnail', e.target.value)} placeholder="/images/thumb.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                      <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
+                        {uploading ? '...' : 'Upload'}
+                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, i, 'video_thumbnail' as any)} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addVideo}
+            className="mt-8 flex items-center justify-center space-x-2 w-full py-4 border-2 border-dashed border-emerald/50 text-emerald hover:bg-emerald/5 rounded-[2rem] font-montserrat font-semibold transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add New Video</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'contact' && (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">Contact Details</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <input type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+              <input type="text" value={contact.phone} onChange={e => setContact({...contact, phone: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number (with country code)</label>
+              <input type="text" value={contact.whatsapp} onChange={e => setContact({...contact, whatsapp: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+              <p className="text-xs text-gray-500 mt-1">Example: +919876543210 (Used for "Send Query")</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Physical Address</label>
+              <textarea value={contact.address} onChange={e => setContact({...contact, address: e.target.value})} rows={3} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm resize-none" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'about' && (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">About Page Content</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Heading</label>
+              <input type="text" value={about.heading} onChange={e => setAbout({...about, heading: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Main Content</label>
+              <textarea value={about.content} onChange={e => setAbout({...about, content: e.target.value})} rows={10} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Featured Image</label>
+              <div className="flex items-center space-x-4">
+                <input type="text" value={about.image} onChange={e => setAbout({...about, image: e.target.value})} className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
+                  {uploading ? '...' : 'Upload'}
+                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 0, 'about' as any)} className="hidden" />
+                </label>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-
-        <button
-          onClick={addSlide}
-          className="mt-8 flex items-center justify-center space-x-2 w-full py-4 border-2 border-dashed border-emerald/50 text-emerald hover:bg-emerald/5 rounded-[2rem] font-montserrat font-semibold transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add New Slide</span>
-        </button>
-      </div>
-
-      <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 mt-8">
-        <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">Fabric Showcase</h2>
-        
-        <div className="space-y-6">
-          {fabrics.map((fabric, i) => (
-            <div key={i} className="flex flex-col space-y-6 p-8 bg-gray-50 border border-gray-200 rounded-[2rem] relative transition-all hover:shadow-md">
-              <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-playfair font-bold text-emerald">Fabric {i + 1}</h3>
-                <button onClick={() => removeFabric(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Fabric Name</label>
-                  <input type="text" value={fabric.name} onChange={e => updateFabric(i, 'name', e.target.value)} placeholder="Emerald Velvet" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Image</label>
-                  <div className="flex items-center space-x-4">
-                    <input type="text" value={fabric.img} onChange={e => updateFabric(i, 'img', e.target.value)} placeholder="/sofas/sofa_emerald_velvet.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-                    <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
-                      {uploading ? '...' : 'Upload'}
-                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, i, 'fabric')} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Dot Color (Hex)</label>
-                  <div className="flex space-x-3">
-                    <input type="color" value={fabric.color} onChange={e => updateFabric(i, 'color', e.target.value)} className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-0 p-0" />
-                    <input type="text" value={fabric.color} onChange={e => updateFabric(i, 'color', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm uppercase uppercase" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={addFabric}
-          className="mt-8 flex items-center justify-center space-x-2 w-full py-4 border-2 border-dashed border-emerald/50 text-emerald hover:bg-emerald/5 rounded-[2rem] font-montserrat font-semibold transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add New Fabric</span>
-        </button>
-      </div>
+      )}
     </div>
   )
 }

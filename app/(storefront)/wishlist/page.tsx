@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Heart, Trash2, ShoppingCart, ArrowRight } from 'lucide-react'
-import { useWishlistStore, useCartStore } from '@/lib/store'
-import { formatPrice } from '@/lib/utils'
+import { Heart, Trash2, ArrowRight } from 'lucide-react'
+import { useWishlistStore } from '@/lib/store'
 
 export default function WishlistPage() {
   const { items, toggleWishlist } = useWishlistStore()
-  const addToCart = useCartStore((state) => state.addToCart)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -17,18 +15,6 @@ export default function WishlistPage() {
   }, [])
 
   if (!mounted) return null
-
-  const handleMoveToCart = (product: any) => {
-    addToCart({
-      product,
-      quantity: 1,
-      selected_fabric: product.fabric_options.standard[0],
-      fabric_type: 'standard',
-      total_price: product.base_price,
-    })
-    toggleWishlist(product)
-    alert(`Moved ${product.name} to cart!`)
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -52,7 +38,7 @@ export default function WishlistPage() {
             </div>
             <h2 className="text-2xl font-playfair font-bold text-charcoal mb-3">Your wishlist is empty</h2>
             <p className="text-gray-500 font-montserrat mb-8 max-w-md mx-auto">
-              Save your favorite luxury pieces here while you browse, and easily move them to your cart when you're ready.
+              Save your favorite luxury pieces here while you browse.
             </p>
             <Link 
               href="/products" 
@@ -106,10 +92,7 @@ export default function WishlistPage() {
                     <p className="text-sm font-montserrat text-gray-500 mb-3 line-clamp-2">
                       {product.description}
                     </p>
-                    <div className="flex items-end justify-between mb-4">
-                      <p className="text-xl font-montserrat font-bold text-emerald">
-                        {formatPrice(product.base_price)}
-                      </p>
+                    <div className="flex items-end justify-between mb-2">
                       <p className="text-xs text-gray-400 font-montserrat">
                         {product.material}
                       </p>
@@ -118,14 +101,12 @@ export default function WishlistPage() {
                   
                   {/* Actions */}
                   <div className="pt-4 border-t border-gray-100 flex gap-3">
-                    <button
-                      onClick={() => handleMoveToCart(product)}
-                      disabled={!product.in_stock}
-                      className="flex-1 flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light disabled:bg-gray-200 disabled:text-gray-400 text-white py-3 rounded-luxury font-montserrat font-semibold transition-colors text-sm"
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white py-3 rounded-luxury font-montserrat font-semibold transition-colors text-sm"
                     >
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>{product.in_stock ? 'Move to Cart' : 'Unavailable'}</span>
-                    </button>
+                      <span>View Details</span>
+                    </Link>
                   </div>
                 </div>
               </motion.div>

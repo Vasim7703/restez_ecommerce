@@ -41,9 +41,31 @@ const FALLBACK_FABRICS = [
   { name: 'Terracotta',       img: '/sofas/sofa_terracotta.png',       color: '#c1440e' },
 ]
 
+const FALLBACK_VIDEO_GALLERY = {
+  videos: [
+    { title: 'Crafting the Chesterfield', url: 'https://www.youtube.com/watch?v=123', thumbnail: '' },
+  ]
+}
+
+const FALLBACK_CONTACT_DETAILS = {
+  email: 'info@restez.com',
+  phone: '+91 9876543210',
+  address: '123 Furniture Row, Design District',
+  whatsapp: '+91 9876543210'
+}
+
+const FALLBACK_ABOUT_PAGE = {
+  heading: 'About RESTEZ',
+  content: 'We craft premium furniture...',
+  image: '/sofas/sofa_emerald_velvet.png'
+}
+
 const FALLBACKS: Record<string, unknown> = {
   homepage_carousel: FALLBACK_CAROUSEL,
   homepage_fabrics: FALLBACK_FABRICS,
+  video_gallery: FALLBACK_VIDEO_GALLERY,
+  contact_details: FALLBACK_CONTACT_DETAILS,
+  about_page: FALLBACK_ABOUT_PAGE,
 }
 
 export async function GET(request: Request) {

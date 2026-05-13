@@ -39,17 +39,13 @@ model Product {
   name             String
   slug             String   @unique
   description      String
-  base_price       Int
   category         String
   collection       String
   material         String
   seating_capacity Int
   style            String
   dimensions       String   // Stringified JSON: { length: number, width: number, height: number }
-  fabric_options   String   // Stringified JSON: { standard: string[], premium: string[] }
-  premium_upcharge Int
   images           String   // Stringified JSON: { main, front, angle_45... }
-  fabric_images    String   @default("{}") // Stringified JSON: { "Fabric Name": "imageUrl" }
   in_stock         Boolean
   featured         Boolean
   reviews          Review[]

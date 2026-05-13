@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, Menu, X, Search, User, LogOut, ChevronDown, ShieldCheck, Heart } from 'lucide-react'
+import { Menu, X, Search, User, LogOut, ChevronDown, ShieldCheck, Heart } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
-import { useCartStore, useAuthStore, useWishlistStore } from '@/lib/store'
+import { useAuthStore, useWishlistStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/lib/supabase'
@@ -20,7 +20,6 @@ export default function Header() {
   const searchRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  const itemCount = useCartStore((state) => state.getItemCount())
   const wishlistItemCount = useWishlistStore((state) => state.items.length)
   const { user, isAuthenticated, logout } = useAuthStore()
 
@@ -193,22 +192,7 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="relative p-2 hover:bg-gold/10 rounded-full transition-colors group"
-            >
-              <ShoppingCart className="w-5 h-5 text-charcoal group-hover:text-emerald transition-colors" />
-              {mounted && itemCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-gold text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-gold-glow"
-                >
-                  {itemCount}
-                </motion.span>
-              )}
-            </Link>
+
 
             {/* Auth Section — Desktop */}
             <div className="hidden md:flex items-center space-x-2">

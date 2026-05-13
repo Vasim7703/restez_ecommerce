@@ -4,22 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Heart, Share2, Truck, Shield, Star, Minus, Plus, Check, X } from 'lucide-react'
+import { ShoppingCart, Heart, Share2, Truck, Shield, Star, Check, X, MessageCircle, ArrowRight } from 'lucide-react'
 import ScrollytellingViewer from '@/components/ScrollytellingViewer'
 import ProductReviews from '@/components/ProductReviews'
 import WillItFitModal from '@/components/WillItFitModal'
-import SwatchRequestModal from '@/components/SwatchRequestModal'
-import EmiModal from '@/components/EmiModal'
-import { useCartStore, useWishlistStore, useAuthStore } from '@/lib/store'
-import { formatPrice, validatePincode, checkPincodeServiceability } from '@/lib/utils'
-import { Product, CartItem } from '@/lib/supabase'
+import { useWishlistStore, useAuthStore } from '@/lib/store'
+import { validatePincode, checkPincodeServiceability } from '@/lib/utils'
+import { Product } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-
-
-/** If admin uploaded a photo for this fabric, use it. Otherwise returns null — show base image unchanged. */
-const getFabricImage = (product: { fabric_images: Record<string, string>; images: { main: string } }, fabricName: string): string | null => {
-  return product.fabric_images?.[fabricName] || null
-}
 
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const router = useRouter()
@@ -28,23 +20,17 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   
-  const [selectedFabricType, setSelectedFabricType] = useState<'standard' | 'premium'>('standard')
-  const [selectedFabric, setSelectedFabric] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [pincode, setPincode] = useState('')
+  const [whatsappNumber, setWhatsappNumber] = useState('919876543210')
   const [pincodeStatus, setPincodeStatus] = useState<{
     checking: boolean
     serviceable?: boolean
     deliveryDays?: number
   }>({ checking: false })
-  const [showARViewer, setShowARViewer] = useState(false)
   const [showFitGuide, setShowFitGuide] = useState(false)
-  const [showSwatchModal, setShowSwatchModal] = useState(false)
-  const [showEmiModal, setShowEmiModal] = useState(false)
 
-  const addToCart = useCartStore((state) => state.addToCart)
   const { toggleWishlist, isInWishlist } = useWishlistStore()
-  const { isAuthenticated } = useAuthStore()
   const { showToast } = useToast()
   const [inWishlist, setInWishlist] = useState(false)
 
@@ -63,7 +49,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         const found = data.find(p => p.slug === params.slug)
         if (found) {
           setProduct(found)
-          setSelectedFabric(found.fabric_options.standard[0])
           setRelatedProducts(data.filter(p => p.id !== found.id).slice(0, 3))
         }
         setLoading(false)
@@ -72,6 +57,18 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         console.error("Failed to load product", err)
         setLoading(false)
       })
+
+    // Fetch CMS contact details for WhatsApp number
+    fetch('/api/cms?key=contact_details')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data?.whatsapp) {
+          // Remove any non-digit characters
+          const cleanNumber = data.data.whatsapp.replace(/\D/g, '')
+          setWhatsappNumber(cleanNumber)
+        }
+      })
+      .catch(console.error)
   }, [params.slug])
 
   if (loading) {
@@ -92,36 +89,16 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     )
   }
 
-  const currentPrice = selectedFabricType === 'premium' 
-    ? product.base_price + product.premium_upcharge 
-    : product.base_price
-
   const avgRating = product.reviews && product.reviews.length > 0 
     ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
     : 0
-
-  // If admin uploaded a photo for the selected fabric, use it for the fabric section and main view
-  const fabricSpecificImage = getFabricImage(product, selectedFabric)
 
   const scrollytellingSections = [
     {
       id: 'front',
       title: 'Front View',
       content: 'Experience the grand frontal presence of our masterpiece. Notice the intricate carved details that showcase the artisan\'s dedication to traditional craftsmanship.',
-      image: fabricSpecificImage || product.images.front,
-    },
-    {
-      id: 'frame',
-      title: 'Frame & Material',
-      content: `Constructed from premium ${product.material}, sourced from sustainable forests. Each piece of wood is carefully selected for its strength, grain pattern, and durability. Our artisans at Artech Furniture have over 20 years of woodworking expertise.`,
-      image: product.images.angle_45,
-    },
-    {
-      id: 'fabric',
-      title: `Fabric & Upholstery — ${selectedFabric}`,
-      content: 'Choose from our curated selection of fabrics. Standard options feature durable, stain-resistant materials perfect for daily use. Premium fabrics include silk blends, Italian leather, and hand-woven brocades that add unparalleled luxury.',
-      // Use fabric-specific image here — this is the colour preview section
-      image: fabricSpecificImage || product.images.side,
+      image: product.images.front || product.images.main,
     },
     {
       id: 'dimensions',
@@ -148,25 +125,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     setPincodeStatus({ checking: false, ...result })
   }
 
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname))
-      return
-    }
-    doAddToCart()
-  }
-
-  const doAddToCart = () => {
-    if (!product) return
-    const cartItem: CartItem = {
-      product,
-      quantity,
-      selected_fabric: selectedFabric,
-      fabric_type: selectedFabricType,
-      total_price: currentPrice,
-    }
-    addToCart(cartItem)
-    showToast(`${product.name} added to cart! 🛒`, 'success')
+  const handleSendQuery = () => {
+    const message = encodeURIComponent(`Hi, I'm interested in the ${product.name} (https://restez.in/products/${product.slug}). Please provide more details.`)
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
   }
 
   return (
@@ -185,10 +146,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       {/* ── MOBILE IMAGE GALLERY (hidden on desktop) ── */}
       <div className="md:hidden">
         <div className="relative w-full aspect-square overflow-hidden bg-gray-100">
-          {/* Show fabric-specific photo if admin uploaded one, otherwise show base image */}
           <img
-            src={getFabricImage(product, selectedFabric) || product.images.main}
-            alt={`${product.name} — ${selectedFabric}`}
+            src={product.images.main}
+            alt={product.name}
             className="w-full h-full object-cover transition-all duration-500"
           />
           {!product.in_stock && (
@@ -226,14 +186,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             <a href="#reviews" className="text-xs text-blue-600 font-montserrat">{product.reviews?.length ?? 0} ratings</a>
           </div>
           <div className="mt-3 pb-3 border-b border-dashed border-gray-200">
-            <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold text-charcoal font-montserrat">{formatPrice(currentPrice)}</span>
-              {selectedFabricType === 'premium' && (
-                <span className="text-xs text-gold font-montserrat">Premium fabric included</span>
-              )}
-            </div>
-            <button onClick={() => setShowEmiModal(true)} className="text-xs text-emerald font-montserrat mt-1 hover:underline">
-              No Cost EMI from {formatPrice(Math.round(currentPrice / 6))}/mo
+            <button onClick={handleSendQuery} className="text-sm text-emerald font-montserrat font-bold hover:underline flex items-center gap-1">
+              <MessageCircle className="w-4 h-4" /> Send Query on WhatsApp
             </button>
           </div>
           {/* Delivery row */}
@@ -248,30 +202,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             <Shield className="w-4 h-4 text-emerald flex-shrink-0" />
             <span className="text-sm font-montserrat text-gray-600">5-Year warranty · <span className="text-emerald font-semibold">{product.material}</span></span>
           </div>
-        </div>
-
-        {/* Mobile Fabric Selector */}
-        <div className="px-3 py-4 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-montserrat font-semibold text-charcoal">Fabric Type</p>
-            <button onClick={() => setShowSwatchModal(true)} className="text-xs text-gold font-montserrat">Request Swatches →</button>
-          </div>
-          <div className="flex space-x-2 mb-3">
-            <button onClick={() => { setSelectedFabricType('standard'); setSelectedFabric(product.fabric_options.standard[0]) }}
-              className={`flex-1 py-2 rounded-xl text-sm font-montserrat font-semibold border-2 transition-all ${ selectedFabricType === 'standard' ? 'border-emerald bg-emerald text-white' : 'border-gray-200 text-gray-600'}`}>
-              Standard
-            </button>
-            <button onClick={() => { setSelectedFabricType('premium'); setSelectedFabric(product.fabric_options.premium[0]) }}
-              className={`flex-1 py-2 rounded-xl text-sm font-montserrat font-semibold border-2 transition-all ${ selectedFabricType === 'premium' ? 'border-gold bg-gold text-white' : 'border-gray-200 text-gray-600'}`}>
-              Premium +{formatPrice(product.premium_upcharge)}
-            </button>
-          </div>
-          <select value={selectedFabric} onChange={e => setSelectedFabric(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-xl font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-emerald bg-white">
-            {(selectedFabricType === 'standard' ? product.fabric_options.standard : product.fabric_options.premium).map(f => (
-              <option key={f} value={f}>{f}</option>
-            ))}
-          </select>
         </div>
 
         {/* Mobile Delivery Check */}
@@ -365,117 +295,17 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       {/* Product Configuration Panel — desktop only */}
       <div className="hidden md:block sticky bottom-0 bg-white border-t-2 border-gold/30 shadow-luxury-lg z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Price */}
-            <div>
-              <p className="text-sm text-gray-600 font-montserrat mb-1">Price</p>
-              <p className="text-3xl font-playfair font-bold text-emerald">
-                {formatPrice(currentPrice)}
-              </p>
-              {selectedFabricType === 'premium' && (
-                <p className="text-sm text-gold font-montserrat mt-1">
-                  + {formatPrice(product.premium_upcharge)} for premium fabric
-                </p>
-              )}
-              <button 
-                onClick={() => setShowEmiModal(true)}
-                className="text-xs text-emerald mt-2 font-montserrat font-semibold hover:underline"
-              >
-                No Cost EMI from {formatPrice(Math.round(currentPrice / 6))}/mo. View Plans
-              </button>
-            </div>
-
-            {/* Fabric Selection */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-montserrat font-semibold text-gray-700">
-                  Select Fabric Type
-                </p>
-                <button 
-                  onClick={() => setShowSwatchModal(true)}
-                  className="text-xs text-gold hover:text-gold-dark font-montserrat font-medium"
-                >
-                  Request Swatches
-                </button>
-              </div>
-              <div className="flex space-x-3 mb-4">
-                <button
-                  onClick={() => {
-                    setSelectedFabricType('standard')
-                    setSelectedFabric(product.fabric_options.standard[0])
-                  }}
-                  className={`px-4 py-2 rounded-luxury font-montserrat text-sm transition-all ${
-                    selectedFabricType === 'standard'
-                      ? 'bg-emerald text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Standard
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedFabricType('premium')
-                    setSelectedFabric(product.fabric_options.premium[0])
-                  }}
-                  className={`px-4 py-2 rounded-luxury font-montserrat text-sm transition-all ${
-                    selectedFabricType === 'premium'
-                      ? 'bg-gold text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Premium
-                </button>
-              </div>
-
-              <select
-                value={selectedFabric}
-                onChange={(e) => setSelectedFabric(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-luxury font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-emerald"
-              >
-                {(selectedFabricType === 'standard' 
-                  ? product.fabric_options.standard 
-                  : product.fabric_options.premium
-                ).map((fabric) => (
-                  <option key={fabric} value={fabric}>
-                    {fabric}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Actions */}
             <div className="flex flex-col space-y-3">
-              {/* Quantity */}
-              <div className="flex items-center space-x-4">
-                <p className="text-sm font-montserrat font-semibold text-gray-700">
-                  Quantity
-                </p>
-                <div className="flex items-center space-x-2 border border-gray-300 rounded-luxury">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 hover:bg-gray-100 rounded-l-luxury"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="px-4 font-montserrat font-semibold">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-2 hover:bg-gray-100 rounded-r-luxury"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
               <button
-                onClick={handleAddToCart}
-                className="flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white px-6 py-3 rounded-luxury font-montserrat font-semibold transition-all shadow-luxury hover:shadow-luxury-lg"
+                onClick={handleSendQuery}
+                className="flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white px-6 py-4 rounded-luxury font-montserrat font-semibold transition-all shadow-luxury hover:shadow-luxury-lg w-full"
               >
-                <ShoppingCart className="w-5 h-5" />
-                <span>Add to Cart</span>
+                <MessageCircle className="w-5 h-5" />
+                <span>Send Query via WhatsApp</span>
               </button>
+              <p className="text-xs text-center text-gray-500 font-montserrat">Our team will get back to you with details.</p>
             </div>
-          </div>
         </div>
       </div>
 
@@ -603,7 +433,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                   <div className="flex items-center space-x-1 my-0.5">
                     {[...Array(5)].map((_,i)=>(<Star key={i} className={`w-2.5 h-2.5 ${i<Math.round(relAvg)?'fill-gold text-gold':'fill-gray-200 text-gray-200'}`}/>))}
                   </div>
-                  <p className="text-sm font-montserrat font-bold text-charcoal">{formatPrice(related.base_price)}</p>
+                  <p className="text-sm font-montserrat font-bold text-charcoal flex items-center justify-between mt-2">
+                    <span className="text-emerald hover:underline">View Details</span>
+                  </p>
                 </Link>
               )
             })}
@@ -623,7 +455,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                       {[...Array(5)].map((_,i)=>(<Star key={i} className={`w-3.5 h-3.5 ${i<Math.round(relAvgRating)?'fill-gold text-gold':'fill-gray-200 text-gray-200'}`}/>))}
                       <span className="text-xs text-gray-400 font-montserrat ml-1">({related.reviews?.length ?? 0})</span>
                     </div>
-                    <p className="text-xl font-montserrat font-bold text-charcoal">{formatPrice(related.base_price)}</p>
+                    <p className="text-sm font-montserrat font-bold text-emerald flex items-center gap-1 mt-2 hover:underline">
+                      View Details <ArrowRight className="w-4 h-4" />
+                    </p>
                   </Link>
                 </div>
               )
@@ -636,19 +470,11 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 px-3 py-3 pb-safe">
         <div className="flex space-x-3">
           <button
-            onClick={handleAddToCart}
-            disabled={!product.in_stock}
-            className="flex-1 flex items-center justify-center space-x-2 bg-gold hover:bg-gold-light disabled:opacity-50 text-white py-3.5 rounded-xl font-montserrat font-bold text-sm transition-all"
+            onClick={handleSendQuery}
+            className="flex-1 flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white py-3.5 rounded-xl font-montserrat font-bold text-sm transition-all"
           >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Add to Cart</span>
-          </button>
-          <button
-            onClick={() => { handleAddToCart(); router.push('/cart') }}
-            disabled={!product.in_stock}
-            className="flex-1 flex items-center justify-center bg-emerald hover:bg-emerald-light disabled:opacity-50 text-white py-3.5 rounded-xl font-montserrat font-bold text-sm transition-all"
-          >
-            Buy Now
+            <MessageCircle className="w-4 h-4" />
+            <span>Send Query</span>
           </button>
         </div>
       </div>
@@ -685,18 +511,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
 
       {/* Modals */}
-      <EmiModal 
-        isOpen={showEmiModal} 
-        onClose={() => setShowEmiModal(false)} 
-        price={currentPrice} 
-      />
-      
-      <SwatchRequestModal 
-        isOpen={showSwatchModal} 
-        onClose={() => setShowSwatchModal(false)} 
-        availableFabrics={[...product.fabric_options.standard, ...product.fabric_options.premium]} 
-      />
-      
       <WillItFitModal 
         isOpen={showFitGuide} 
         onClose={() => setShowFitGuide(false)} 

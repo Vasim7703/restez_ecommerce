@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import PrintButton from './PrintButton'
 import { QRCodeSVG } from 'qrcode.react'
-
-const prisma = new PrismaClient()
 
 export default async function LabelPrintPage({ 
   params,
@@ -32,8 +30,20 @@ export default async function LabelPrintPage({
     order.status = 'carcass_manufacturing'
   }
 
-  const items = JSON.parse(order.items || '[]')
-  const address = JSON.parse(order.address || '{}')
+  let items: any[] = [];
+  try {
+    const parsed = JSON.parse(order.items || '[]');
+    items = Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Failed to parse items for order:", order.id, e);
+  }
+
+  let address: any = {};
+  try {
+    address = JSON.parse(order.address || '{}');
+  } catch (e) {
+    console.error("Failed to parse address for order:", order.id, e);
+  }
 
   // Fetch product details to map product names and materials
   const productIds = items.map((i: any) => i.productId).filter(Boolean)

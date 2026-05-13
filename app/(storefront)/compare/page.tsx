@@ -3,13 +3,11 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { useCompareStore, useCartStore } from '@/lib/store'
-import { X, ArrowRight, Check, ShoppingCart } from 'lucide-react'
-import { formatPrice } from '@/lib/utils'
+import { useCompareStore } from '@/lib/store'
+import { X, ArrowRight, Check } from 'lucide-react'
 
 export default function ComparePage() {
   const { items, removeFromCompare, clearCompare } = useCompareStore()
-  const addToCart = useCartStore(state => state.addToCart)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -63,15 +61,13 @@ export default function ComparePage() {
                     <Link href={`/products/${product.slug}`} className="font-playfair text-xl font-bold text-charcoal hover:text-emerald transition-colors line-clamp-2">
                        {product.name}
                     </Link>
-                    <p className="text-2xl text-emerald font-bold mt-2 font-playfair">{formatPrice(product.base_price)}</p>
-                    
-                    <button 
-                      onClick={() => addToCart({ product, quantity: 1, selected_fabric: product.fabric_options.standard[0], fabric_type: 'standard', total_price: product.base_price })}
+                    <Link 
+                      href={`/products/${product.slug}`}
                       className="mt-4 w-full flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white py-2 rounded font-montserrat font-semibold transition-colors"
                     >
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>Add to Cart</span>
-                    </button>
+                      <span>View Details</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   </th>
                 ))}
                 {/* Empty slots if less than 3 */}
