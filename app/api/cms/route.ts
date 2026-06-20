@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-options'
+import { createClient } from '@supabase/supabase-js'
+
+// ── Server-side Supabase client ───────────────────────────────────────────────
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // Use service role key if available, otherwise fall back to anon key
+  // The anon key will work if the RLS policy allows anon access on site_config
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  return createClient(url, key, {
+    auth: { persistSession: false }
+  })
+}
 
 // ── Hardcoded fallback data (used when DB is unavailable) ─────────────────────
 const FALLBACK_CAROUSEL = {
@@ -76,16 +91,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Key is required' }, { status: 400 })
   }
 
-  // ── Try DB first (may not be available in local dev) ─────────────────────
+  // ── Try Supabase site_config table first ────────────────────────────────────
   try {
-    // Dynamic import so a missing/broken Prisma client can't crash the route module
-    const { prisma } = await import('@/lib/prisma')
-    const config = await (prisma as any).siteConfig.findUnique({ where: { key } })
-    if (config) {
-      return NextResponse.json({ success: true, data: JSON.parse(config.value) })
+    const supabase = getSupabaseAdmin()
+    const { data, error } = await supabase
+      .from('site_config')
+      .select('value')
+      .eq('key', key)
+      .single()
+
+    if (!error && data) {
+      return NextResponse.json({ success: true, data: JSON.parse(data.value) })
     }
   } catch {
-    // DB unavailable or model not yet migrated — fall through to hardcoded data
+    // DB unavailable — fall through to hardcoded data
   }
 
   // ── Return hardcoded fallback ─────────────────────────────────────────────
@@ -98,8 +117,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Admin panel does not use NextAuth — session check removed.
-  // Route-level protection is handled by the /admin layout.
   try {
     const { key, data } = await request.json()
 
@@ -107,16 +124,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Key and data required' }, { status: 400 })
     }
 
-    const { prisma } = await import('@/lib/prisma')
-    const config = await (prisma as any).siteConfig.upsert({
-      where:  { key },
-      update: { value: JSON.stringify(data) },
-      create: { key, value: JSON.stringify(data) },
-    })
+    const supabase = getSupabaseAdmin()
 
-    return NextResponse.json({ success: true, data: JSON.parse(config.value) })
-  } catch (error) {
+    // Upsert into site_config table
+    const { data: row, error } = await supabase
+      .from('site_config')
+      .upsert(
+        { key, value: JSON.stringify(data), updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+      .select('value')
+      .single()
+
+    if (error) {
+      console.error('Supabase CMS save error:', error)
+      return NextResponse.json({
+        error: 'Failed to save configuration',
+        details: error.message,
+        code: error.code
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data: JSON.parse(row.value) })
+  } catch (error: any) {
     console.error('Error saving CMS config:', error)
-    return NextResponse.json({ error: 'Failed to save configuration' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to save configuration', 
+      details: error.message,
+    }, { status: 500 })
   }
 }

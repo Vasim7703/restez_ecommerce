@@ -1,11 +1,5 @@
 'use client'
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -92,103 +86,15 @@ export default function CheckoutPage() {
     
     const orderAddr = showNewAddressForm ? address : (addresses.find(a => a.id === selectedAddressId) || address)
 
-    // HANDLE RAZORPAY PAYMENT (For non-COD methods)
-    if (paymentMethod !== 'cod') {
-      try {
-        // 1. Create Razorpay Order
-        const res = await fetch('/api/checkout/razorpay', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: total }),
-        });
-        
-        if (!res.ok) throw new Error('Razorpay not configured');
-        const rzpOrder = await res.json();
-        if (!rzpOrder.id) throw new Error('Failed to create Razorpay order');
-
-        // 2. Load Razorpay script and open checkout
-        const isLoaded = await loadRazorpayScript();
-        if (!isLoaded) throw new Error('Razorpay SDK failed to load');
-
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
-          amount: rzpOrder.amount,
-          currency: rzpOrder.currency,
-          name: 'RESTEZ Luxury',
-          description: 'Luxury Furniture Purchase',
-          order_id: rzpOrder.id,
-          config: {
-            display: {
-              blocks: {
-                banks: {
-                  name: 'Pay using UPI',
-                  instruments: [{ method: 'upi' }],
-                },
-              },
-              sequence: ['block.banks'],
-              preferences: {
-                show_default_blocks: paymentMethod !== 'upi',
-              },
-            },
-          },
-          handler: async (response: any) => {
-            // 3. Verify Payment
-            const verifyRes = await fetch('/api/checkout/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-            if (verifyData.success) {
-              processFinalOrder(orderAddr, 'Paid via Razorpay');
-            } else {
-              setOrderError('Payment verification failed. Please contact support.');
-              setLoading(false);
-            }
-          },
-          prefill: {
-            name: orderAddr.name,
-            email: 'email' in orderAddr ? orderAddr.email : (user?.email || ''),
-            contact: orderAddr.phone,
-          },
-          theme: { color: '#004D40' },
-        };
-
-        const paymentObject = new window.Razorpay(options);
-        paymentObject.open();
-        
-      } catch (err) {
-        console.error('Razorpay Error:', err);
-        // ── Graceful fallback: proceed as COD when payment gateway is not yet configured ──
-        setOrderError('Online payment is being set up. Your order has been placed as Cash on Delivery — you can pay when it arrives.');
-        processFinalOrder(orderAddr, 'Cash on Delivery (Payment gateway pending setup)');
-      }
-
-      return;
-    }
-
-    // Default flow for COD
-    processFinalOrder(orderAddr, 'Cash on Delivery');
+    // All orders are submitted as enquiries — our team contacts the customer
+    const paymentLabel = paymentMethod === 'cod' ? 'Cash on Delivery' :
+                         paymentMethod === 'upi'  ? 'UPI / QR Code (pending)' :
+                         paymentMethod === 'card' ? 'Card Payment (pending)' :
+                         paymentMethod === 'emi'  ? 'No-Cost EMI (pending)' :
+                         paymentMethod
+    processFinalOrder(orderAddr, paymentLabel)
   }
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
 
   const processFinalOrder = async (orderAddr: any, statusLabel: string) => {
     setLoading(true)

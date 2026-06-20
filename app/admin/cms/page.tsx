@@ -15,7 +15,14 @@ export default function CMSPage() {
   const [slides, setSlides] = useState<any[]>([])
   const [videos, setVideos] = useState<any[]>([])
   const [contact, setContact] = useState({ email: '', phone: '', address: '', whatsapp: '' })
-  const [about, setAbout] = useState({ heading: '', content: '', image: '' })
+  const [about, setAbout] = useState({ 
+    heading: '', 
+    content: '', 
+    image: '',
+    heroTitle: '',
+    heroSubtitle: '',
+    heroImage: ''
+  })
 
   const [activeTab, setActiveTab] = useState<'homepage' | 'videos' | 'contact' | 'about'>('homepage')
 
@@ -87,7 +94,10 @@ export default function CMSPage() {
         })
       ])
       
-      if (responses.some(res => !res.ok)) throw new Error('Failed to save some CMS config')
+      if (responses.some(res => !res.ok)) {
+        const errorData = await responses.find(res => !res.ok)?.json()
+        throw new Error(errorData?.details || errorData?.error || 'Failed to save some CMS config')
+      }
       
       setSuccess('CMS updated successfully!')
       setTimeout(() => setSuccess(''), 3000)
@@ -150,6 +160,8 @@ export default function CMSPage() {
         updateVideo(index, 'thumbnail', data.url)
       } else if (type === 'about') {
         setAbout({ ...about, image: data.url })
+      } else if (type === 'about_hero') {
+        setAbout({ ...about, heroImage: data.url })
       }
     } catch (err: any) {
       setError(err.message)
@@ -341,25 +353,56 @@ export default function CMSPage() {
 
       {activeTab === 'about' && (
         <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
-          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">About Page Content</h2>
+          <h2 className="text-2xl font-playfair font-bold mb-8 text-charcoal">About Page</h2>
           
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Heading</label>
-              <input type="text" value={about.heading} onChange={e => setAbout({...about, heading: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+          <div className="space-y-8">
+            {/* Hero Section */}
+            <div className="p-8 bg-gray-50 border border-gray-200 rounded-[2rem]">
+              <h3 className="text-lg font-playfair font-bold text-emerald mb-6">Hero Section</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Hero Title</label>
+                  <input type="text" value={about.heroTitle} onChange={e => setAbout({ ...about, heroTitle: e.target.value })} placeholder="The Art of Restez" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Hero Subtitle</label>
+                  <input type="text" value={about.heroSubtitle} onChange={e => setAbout({ ...about, heroSubtitle: e.target.value })} placeholder="Where traditional Indian craftsmanship meets..." className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Hero Background Image</label>
+                  <div className="flex items-center space-x-4">
+                    <input type="text" value={about.heroImage} onChange={e => setAbout({ ...about, heroImage: e.target.value })} placeholder="/sofas/sofa_lifestyle_room.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                    <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
+                      {uploading ? '...' : 'Upload'}
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 0, 'about_hero' as any)} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Main Content</label>
-              <textarea value={about.content} onChange={e => setAbout({...about, content: e.target.value})} rows={10} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Featured Image</label>
-              <div className="flex items-center space-x-4">
-                <input type="text" value={about.image} onChange={e => setAbout({...about, image: e.target.value})} className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
-                <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
-                  {uploading ? '...' : 'Upload'}
-                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 0, 'about' as any)} className="hidden" />
-                </label>
+
+            {/* Story Section */}
+            <div className="p-8 bg-gray-50 border border-gray-200 rounded-[2rem]">
+              <h3 className="text-lg font-playfair font-bold text-emerald mb-6">Our Story Section</h3>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Section Heading</label>
+                  <input type="text" value={about.heading} onChange={e => setAbout({ ...about, heading: e.target.value })} placeholder="The Artech Heritage" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
+                  <textarea value={about.content} onChange={e => setAbout({ ...about, content: e.target.value })} rows={10} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm outline-none focus:ring-2 focus:ring-emerald" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Story Image</label>
+                  <div className="flex items-center space-x-4">
+                    <input type="text" value={about.image} onChange={e => setAbout({ ...about, image: e.target.value })} placeholder="/sofas/sofa_emerald_velvet.png" className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl font-montserrat shadow-sm" />
+                    <label className="cursor-pointer bg-emerald/10 text-emerald hover:bg-emerald hover:text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap">
+                      {uploading ? '...' : 'Upload'}
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 0, 'about' as any)} className="hidden" />
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

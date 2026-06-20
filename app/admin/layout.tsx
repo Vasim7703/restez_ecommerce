@@ -8,7 +8,6 @@ import {
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
-  Tag,
   LogOut,
   Menu,
   X
@@ -58,7 +57,6 @@ export default function AdminLayout({
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Coupons', href: '/admin/coupons', icon: Tag },
     { name: 'Site Content', href: '/admin/cms', icon: LayoutDashboard },
   ]
 

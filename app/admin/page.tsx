@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { DollarSign, Package, ShoppingCart, TrendingUp, Users, Loader2 } from 'lucide-react'
+import { DollarSign, Package, ShoppingCart, LayoutDashboard, Users, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
 import { useEffect, useState } from 'react'
@@ -223,13 +223,13 @@ export default function AdminDashboard() {
         </Link>
 
         <Link
-          href="/admin/coupons"
+          href="/admin/cms"
           className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-6 rounded-luxury shadow-luxury hover:shadow-luxury-lg transition-all group"
         >
-          <TrendingUp className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="text-xl font-playfair font-bold mb-2">Create Coupon</h3>
+          <LayoutDashboard className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform" />
+          <h3 className="text-xl font-playfair font-bold mb-2">Site Content</h3>
           <p className="text-sm text-white/90 font-montserrat">
-            Generate discount codes
+            Edit homepage, about &amp; contact
           </p>
         </Link>
       </div>

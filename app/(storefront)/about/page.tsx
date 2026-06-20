@@ -31,7 +31,10 @@ export default function AboutPage() {
   const [about, setAbout] = useState({
     heading: 'The Artech Heritage',
     content: 'Founded by Artech Furniture, RESTEZ was born from a singular vision: to redefine the Indian luxury furniture landscape. Our name, derived from the French word for "stay", invites you to linger in comfort and elegance.\n\nFor decades, our artisans have been the silent architects behind some of India\'s most prestigious interiors. Every sofa we create is a symphony of meticulously seasoned wood, hand-picked upholstery, and an obsessive attention to detail that only a master artisan can provide.\n\nWe don\'t just build furniture; we create heirlooms. From the intricate carvings of our Royal Heritage collection to the sleek lines of our Contemporary series, RESTEZ represents a legacy of excellence.',
-    image: '/sofas/sofa_emerald_velvet.png'
+    image: '/sofas/sofa_emerald_velvet.png',
+    heroTitle: 'The Art of Restez',
+    heroSubtitle: 'Where traditional Indian craftsmanship meets the pinnacle of modern luxury living.',
+    heroImage: '/sofas/sofa_lifestyle_room.png'
   })
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function AboutPage() {
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
-          style={{ backgroundImage: 'url("/sofas/sofa_lifestyle_room.png")', filter: 'brightness(0.4)' }}
+          style={{ backgroundImage: `url("${about.heroImage || '/sofas/sofa_lifestyle_room.png'}")`, filter: 'brightness(0.4)' }}
         />
         <div className="relative z-10 text-center px-4 max-w-4xl">
           <motion.h1 
@@ -59,7 +62,15 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl font-playfair font-bold text-white mb-6"
           >
-            The Art of <span className="text-gold italic">Restez</span>
+            {about.heroTitle?.includes('Restez') ? (
+              <>
+                {about.heroTitle.split('Restez')[0]}
+                <span className="text-gold italic">Restez</span>
+                {about.heroTitle.split('Restez')[1]}
+              </>
+            ) : (
+              about.heroTitle || 'The Art of Restez'
+            )}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -67,7 +78,7 @@ export default function AboutPage() {
             transition={{ delay: 0.2 }}
             className="text-xl md:text-2xl font-montserrat text-white/90 leading-relaxed"
           >
-            Where traditional Indian craftsmanship meets the pinnacle of modern luxury living.
+            {about.heroSubtitle || 'Where traditional Indian craftsmanship meets the pinnacle of modern luxury living.'}
           </motion.p>
         </div>
       </section>
