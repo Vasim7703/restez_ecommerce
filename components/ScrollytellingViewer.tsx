@@ -67,7 +67,7 @@ export default function ScrollytellingViewer({ sections, fabricOverlayColor }: S
               >
                 {/* Base image */}
                 <div
-                  className="w-full h-full bg-cover bg-center"
+                  className="w-full h-full bg-contain bg-no-repeat bg-center bg-gray-50/50"
                   style={{ backgroundImage: `url(${sections[activeIndex]?.image})` }}
                 />
 

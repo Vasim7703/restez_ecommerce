@@ -37,7 +37,7 @@ function FabricCardImage({ product }: { product: Product }) {
   return (
     <>
       <div
-        className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-all duration-500"
+        className="w-full h-full bg-contain bg-no-repeat bg-center group-hover:scale-105 transition-all duration-500"
         style={{ backgroundImage: `url(${displayImg})` }}
       />
       {fabricEntries.length > 0 && (

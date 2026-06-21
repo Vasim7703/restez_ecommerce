@@ -149,7 +149,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           <img
             src={product.images.main}
             alt={product.name}
-            className="w-full h-full object-cover transition-all duration-500"
+            className="w-full h-full object-contain transition-all duration-500"
           />
           {!product.in_stock && (
             <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-montserrat font-bold px-3 py-1 rounded-full">Out of Stock</div>
@@ -427,7 +427,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               return (
                 <Link key={related.id} href={`/products/${related.slug}`} className="flex-shrink-0 w-40 block">
                   <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-2">
-                    <img src={related.images.main} alt={related.name} className="w-full h-full object-cover" />
+                    <img src={related.images.main} alt={related.name} className="w-full h-full object-contain" />
                   </div>
                   <p className="text-xs font-montserrat font-semibold text-charcoal line-clamp-2 leading-tight">{related.name}</p>
                   <div className="flex items-center space-x-1 my-0.5">
@@ -447,7 +447,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               return (
                 <div key={related.id} className="group">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-luxury bg-gray-100 mb-4">
-                    <img src={related.images.main} alt={related.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={related.images.main} alt={related.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <Link href={`/products/${related.slug}`} className="block">
                     <h3 className="font-playfair font-bold text-lg text-charcoal group-hover:text-emerald transition-colors line-clamp-1">{related.name}</h3>
