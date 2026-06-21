@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Heart, Share2, Truck, Shield, Star, Check, X, MessageCircle, ArrowRight } from 'lucide-react'
-import ScrollytellingViewer from '@/components/ScrollytellingViewer'
 import ProductReviews from '@/components/ProductReviews'
 import WillItFitModal from '@/components/WillItFitModal'
 import { useWishlistStore, useAuthStore } from '@/lib/store'
@@ -29,6 +28,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     deliveryDays?: number
   }>({ checking: false })
   const [showFitGuide, setShowFitGuide] = useState(false)
+  const [desktopMainImage, setDesktopMainImage] = useState('')
 
   const { toggleWishlist, isInWishlist } = useWishlistStore()
   const { showToast } = useToast()
@@ -49,6 +49,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         const found = data.find(p => p.slug === params.slug)
         if (found) {
           setProduct(found)
+          setDesktopMainImage(found.images.main)
           setRelatedProducts(data.filter(p => p.id !== found.id).slice(0, 3))
         }
         setLoading(false)
@@ -93,26 +94,15 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
     : 0
 
-  const scrollytellingSections = [
-    {
-      id: 'front',
-      title: 'Front View',
-      content: 'Experience the grand frontal presence of our masterpiece. Notice the intricate carved details that showcase the artisan\'s dedication to traditional craftsmanship.',
-      image: product.images.front || product.images.main,
-    },
-    {
-      id: 'dimensions',
-      title: 'Dimensions & Comfort',
-      content: `Perfectly sized at ${product.dimensions.length}cm (L) × ${product.dimensions.width}cm (W) × ${product.dimensions.height}cm (H). Designed ergonomically for Indian body types with high-density foam cushioning that retains shape for years.`,
-      image: product.images.back,
-    },
-    {
-      id: 'details',
-      title: 'Craftsmanship Details',
-      content: 'Every joint is reinforced with traditional mortise and tenon joinery. Hand-applied finishes protect the wood while highlighting its natural beauty. Brass or gold-plated accents add the perfect touch of Indian royalty.',
-      image: product.images.closeup,
-    },
-  ]
+  const allImages = [
+    product.images.main, 
+    product.images.front, 
+    product.images.angle_45, 
+    product.images.side, 
+    product.images.back, 
+    product.images.closeup,
+    ...(product.images.lifestyle || [])
+  ].filter(Boolean)
 
   const handleCheckPincode = async () => {
     if (!validatePincode(pincode)) {
@@ -285,27 +275,79 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         </p>
       </div>
 
-      {/* Main Content: 360° Scrollytelling — desktop only */}
-      <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <ScrollytellingViewer
-          sections={scrollytellingSections}
-        />
-      </div>
+      {/* Main Desktop Gallery & Info */}
+      <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-2 gap-12 items-start">
+          {/* Left: Image Gallery */}
+          <div className="space-y-4 sticky top-24">
+            <div className="w-full aspect-[4/3] bg-gray-50 rounded-luxury overflow-hidden border border-gray-200 relative">
+              <img src={desktopMainImage || product.images.main} alt={product.name} className="w-full h-full object-contain" />
+              {!product.in_stock && (
+                <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-montserrat font-bold px-3 py-1 rounded-full shadow-md">Out of Stock</div>
+              )}
+            </div>
+            {allImages.length > 1 && (
+              <div className="grid grid-cols-6 gap-3">
+                {allImages.map((img, i) => (
+                  <div 
+                    key={i} 
+                    onClick={() => setDesktopMainImage(img)}
+                    className={`aspect-square bg-gray-50 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                      desktopMainImage === img ? 'border-emerald shadow-md' : 'border-transparent hover:border-gray-300'
+                    }`}
+                  >
+                    <img src={img} alt={`view ${i+1}`} className="w-full h-full object-contain" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Right: Product Details & Actions */}
+          <div className="pt-2">
+            <h2 className="text-2xl font-playfair font-bold text-charcoal mb-4">About this item</h2>
+            <p className="text-gray-700 font-montserrat leading-relaxed mb-8">{product.description}</p>
+            
+            <div className="grid grid-cols-2 gap-6 mb-10">
+              <div className="bg-gray-50 p-5 rounded-luxury border border-gray-100">
+                <span className="text-gray-500 text-sm font-montserrat">Seating Capacity</span>
+                <p className="font-semibold text-lg text-charcoal mt-1">{product.seating_capacity} Seater</p>
+              </div>
+              <div className="bg-gray-50 p-5 rounded-luxury border border-gray-100">
+                <span className="text-gray-500 text-sm font-montserrat">Dimensions (L×W×H)</span>
+                <p className="font-semibold text-lg text-charcoal mt-1">{product.dimensions.length}×{product.dimensions.width}×{product.dimensions.height} cm</p>
+              </div>
+              <div className="bg-gray-50 p-5 rounded-luxury border border-gray-100">
+                <span className="text-gray-500 text-sm font-montserrat">Style & Collection</span>
+                <p className="font-semibold text-lg text-charcoal mt-1">{product.style} • {product.collection}</p>
+              </div>
+              <div className="bg-gray-50 p-5 rounded-luxury border border-gray-100">
+                <span className="text-gray-500 text-sm font-montserrat">Material</span>
+                <p className="font-semibold text-lg text-charcoal mt-1">{product.material}</p>
+              </div>
+            </div>
 
-      {/* Product Configuration Panel — desktop only */}
-      <div className="hidden md:block sticky bottom-0 bg-white border-t-2 border-gold/30 shadow-luxury-lg z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            {/* Actions */}
-            <div className="flex flex-col space-y-3">
+            <div className="bg-emerald/5 p-6 rounded-luxury border border-emerald/20 mb-8">
+              <h3 className="font-montserrat font-semibold text-charcoal mb-2 flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-emerald" /> Need help deciding?
+              </h3>
+              <p className="text-sm text-gray-600 font-montserrat mb-4">
+                Our design experts are available on WhatsApp to help you choose the right fabric, answer dimension queries, or discuss custom options.
+              </p>
               <button
                 onClick={handleSendQuery}
-                className="flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white px-6 py-4 rounded-luxury font-montserrat font-semibold transition-all shadow-luxury hover:shadow-luxury-lg w-full"
+                className="flex items-center justify-center space-x-2 bg-emerald hover:bg-emerald-light text-white px-8 py-4 rounded-luxury font-montserrat font-bold transition-all shadow-luxury hover:shadow-luxury-lg w-full"
               >
-                <MessageCircle className="w-5 h-5" />
-                <span>Send Query via WhatsApp</span>
+                <span>Chat with us on WhatsApp</span>
               </button>
-              <p className="text-xs text-center text-gray-500 font-montserrat">Our team will get back to you with details.</p>
             </div>
+            
+            <div className="flex items-center gap-4 text-sm font-montserrat text-gray-600">
+              <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-emerald" /> Free Delivery</span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5"><Shield className="w-4 h-4 text-emerald" /> 5-Year Warranty</span>
+            </div>
+          </div>
         </div>
       </div>
 
