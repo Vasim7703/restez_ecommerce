@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Edit, Trash2, Search, X, Image as ImageIcon, Check, Loader2, Upload } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
-import { Product } from '@/lib/supabase'
+import { Product, supabase } from '@/lib/supabase'
 
 const emptyForm = {
   name: '', slug: '', description: '',
@@ -46,23 +46,24 @@ export default function AdminProductsPage() {
     if (!file) return
 
     setUploadingField(isFabric ? `fabric_${fieldName}` : fieldName)
-    
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-      
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+
+      const { data: uploadData, error } = await supabase.storage
+        .from('products')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false })
+
+      if (error) throw new Error(error.message)
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(fileName)
 
       if (isFabric) {
-        setFabricImages(prev => ({ ...prev, [fieldName]: data.url }))
+        setFabricImages(prev => ({ ...prev, [fieldName]: publicUrl }))
       } else {
-        setForm(prev => ({ ...prev, [fieldName]: data.url }))
+        setForm(prev => ({ ...prev, [fieldName]: publicUrl }))
       }
     } catch (err: any) {
       console.error(err)
