@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +27,28 @@ export async function POST(request: Request) {
     })
 
     if (existingUser) {
-      return NextResponse.json({ error: 'Email or Mobile number is already registered.' }, { status: 400 })
+      if (existingUser.verified) {
+        return NextResponse.json({ error: 'Email or Mobile number is already registered.' }, { status: 400 })
+      } else {
+        // User exists but is unverified, update their info
+        const hashedPassword = await bcrypt.hash(password, 10)
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { name, phone: phone || '', password: hashedPassword }
+        })
+      }
+    } else {
+      // Create new unverified user in Prisma
+      const hashedPassword = await bcrypt.hash(password, 10)
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          phone: phone || '',
+          password: hashedPassword,
+          verified: false
+        }
+      })
     }
 
     // ── Pattern: Supabase Auth (Option 1: FREE REAL OTP) ──────────────────────

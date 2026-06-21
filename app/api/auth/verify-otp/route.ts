@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@/lib/prisma'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,15 +28,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // Success! Supabase automatically handles sessions and logging in
+    // Mark user as verified in Prisma
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { verified: true }
+    })
+
+    // Success! Return the user data from Prisma
     return NextResponse.json({ 
       success: true, 
       user: {
-        id: data.user?.id,
-        name: data.user?.user_metadata?.full_name,
-        email: data.user?.email,
-        phone: data.user?.user_metadata?.phone,
-        role: 'customer'
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        role: updatedUser.role
       },
       session: data.session
     })
