@@ -17,8 +17,6 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [showDemo, setShowDemo] = useState(false)
-
 
   useEffect(() => {
     setMounted(true)
@@ -224,38 +222,6 @@ export default function SignInPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 flex items-center space-x-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-montserrat">OR</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          {/* Admin login link */}
-          <Link
-            href="/admin/login"
-            className="w-full flex items-center justify-center space-x-2 border-2 border-gold/50 hover:border-gold text-gold hover:bg-gold/5 py-3.5 rounded-luxury font-montserrat font-semibold text-sm transition-all"
-          >
-            <span>Admin Portal Login</span>
-          </Link>
-
-          {/* Demo hint — hidden behind toggle */}
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => setShowDemo(v => !v)}
-              className="w-full text-xs font-montserrat text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showDemo ? 'Hide' : 'Show'} demo credentials ›
-            </button>
-            {showDemo && (
-              <div className="mt-2 p-4 bg-emerald/5 border border-emerald/20 rounded-luxury">
-                <p className="text-xs font-montserrat text-gray-600 font-semibold mb-1">Demo Credentials:</p>
-                <p className="text-xs font-montserrat text-gray-500">Email: arjun@example.com</p>
-                <p className="text-xs font-montserrat text-gray-500">Password: customer123</p>
-              </div>
-            )}
-          </div>
         </motion.div>
       </div>
     </div>
