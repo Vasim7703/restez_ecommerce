@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Award, Truck, Shield, Users, RotateCcw, Maximize2, Star } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 
 declare global {
@@ -209,11 +210,16 @@ export default function HomePage() {
                    className="absolute inset-0 z-10 pointer-events-auto"
                  >
                    <div className="w-full h-full rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-2xl relative bg-gray-100">
-                     <img 
-                       src={heroSlides[currentSlide]?.image} 
-                       alt={heroSlides[currentSlide]?.title}
-                       className="absolute inset-0 w-full h-full object-cover object-center"
-                     />
+                     {heroSlides[currentSlide]?.image && (
+                       <Image 
+                         src={heroSlides[currentSlide].image} 
+                         alt={heroSlides[currentSlide]?.title || 'Luxury Furniture'}
+                         fill
+                         priority
+                         className="object-cover object-center"
+                         sizes="(max-width: 1024px) 100vw, 50vw"
+                       />
+                     )}
                      {/* Subtle inner shadow for depth */}
                      <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-[2rem] lg:rounded-[3rem]" />
                    </div>
@@ -267,10 +273,12 @@ export default function HomePage() {
                   >
                     <Link href={`/products/${product.slug}`} className="block">
                       <div className="aspect-[4/3] overflow-hidden bg-gray-100 relative">
-                        <img
+                        <Image
                           src={mainImg}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                         {product.featured && (
                           <div className="absolute top-3 left-3 bg-gold text-white text-[10px] font-montserrat font-bold px-2.5 py-1 rounded-full shadow">
