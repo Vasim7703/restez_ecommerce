@@ -25,7 +25,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://*.supabase.co https://www.google-analytics.com https://stats.g.doubleclick.net",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://stats.g.doubleclick.net",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://stats.g.doubleclick.net https://ajax.googleapis.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
