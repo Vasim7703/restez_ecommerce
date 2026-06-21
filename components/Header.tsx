@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Menu, X, Search, User, LogOut, ChevronDown, ShieldCheck, Heart } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import { useSession } from 'next-auth/react'
 import { useAuthStore, useWishlistStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -21,7 +22,12 @@ export default function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const wishlistItemCount = useWishlistStore((state) => state.items.length)
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user: zustandUser, isAuthenticated: isZustandAuthenticated, logout } = useAuthStore()
+  const { data: session } = useSession()
+  
+  const isNextAuthAdmin = session?.user && (session.user as any).role === 'admin'
+  const isAuthenticated = isZustandAuthenticated || isNextAuthAdmin
+  const user = isNextAuthAdmin ? { name: session.user?.name || 'Admin', email: session.user?.email || '', role: 'admin' } : zustandUser
 
   useEffect(() => { 
     setMounted(true) 
@@ -71,7 +77,11 @@ export default function Header() {
     { name: 'Contact', href: '/contact' },
   ]
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isNextAuthAdmin) {
+      const { signOut } = await import('next-auth/react')
+      await signOut({ redirect: false })
+    }
     logout()
     setUserMenuOpen(false)
     router.push('/')

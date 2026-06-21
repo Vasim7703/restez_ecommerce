@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@/lib/prisma'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,20 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
+    }
+
+    // Check for existing user in Prisma to prevent duplicate emails or phone numbers
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { phone: phone ? phone : 'impossible_string' }
+        ]
+      }
+    })
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'Email or Mobile number is already registered.' }, { status: 400 })
     }
 
     // ── Pattern: Supabase Auth (Option 1: FREE REAL OTP) ──────────────────────

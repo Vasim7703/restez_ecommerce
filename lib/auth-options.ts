@@ -3,12 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import type { NextAuthOptions } from 'next-auth'
 
-// ── Demo accounts for local dev (used when DB is unreachable) ─────────────────
-const DEMO_ACCOUNTS = [
-  { id: 'a1', name: 'Admin', email: 'admin@restez.com', password: 'admin@restez123', role: 'admin' },
-  { id: 'c1', name: 'Arjun Sharma', email: 'arjun@example.com', password: 'customer123', role: 'customer' },
-  { id: 'c2', name: 'Priya Patel', email: 'priya@example.com', password: 'customer123', role: 'customer' },
-]
+
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -33,15 +28,12 @@ export const authOptions: NextAuthOptions = {
             if (!user.verified) return null
             return { id: user.id, name: user.name, email: user.email, role: user.role }
           }
-          // user not in DB — fall through to demo accounts
+          // user not in DB
+          return null
         } catch {
-          // DB unavailable — fall through to demo accounts
+          // DB unavailable
+          return null
         }
-
-        // ── Demo / local-dev fallback ────────────────────────────────────────
-        const demo = DEMO_ACCOUNTS.find(a => a.email === credentials.email)
-        if (!demo || demo.password !== credentials.password) return null
-        return { id: demo.id, name: demo.name, email: demo.email, role: demo.role }
       },
     }),
   ],

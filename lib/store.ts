@@ -37,8 +37,8 @@ export const useAuthStore = create<AuthStore>()(
       checkSession: () => {
         const { lastActive, isAuthenticated, logout } = get()
         if (isAuthenticated && lastActive) {
-          // If inactive for more than 7 days (7 * 24 * 60 * 60 * 1000 ms)
-          const INACTIVITY_TIMEOUT = 7 * 24 * 60 * 60 * 1000
+          // If inactive for more than 15 minutes (15 * 60 * 1000 ms)
+          const INACTIVITY_TIMEOUT = 15 * 60 * 1000
           if (Date.now() - lastActive > INACTIVITY_TIMEOUT) {
             logout()
           }

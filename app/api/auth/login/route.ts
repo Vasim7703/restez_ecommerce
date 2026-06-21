@@ -2,38 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-// ── Local dev fallback ────────────────────────────────────────────────────────
-// When DATABASE_URL is a placeholder these hard-coded demo accounts let you
-// sign in and test the full UI.  They are NEVER used once a real DB is set up.
-const DEMO_USERS = [
-  {
-    id: 'c1',
-    name: 'Arjun Sharma',
-    email: 'arjun@example.com',
-    password: 'customer123', // plain text — compared directly in demo mode
-    phone: '9876543210',
-    role: 'customer',
-    verified: true,
-  },
-  {
-    id: 'c2',
-    name: 'Priya Patel',
-    email: 'priya@example.com',
-    password: 'customer123',
-    phone: '9876543211',
-    role: 'customer',
-    verified: true,
-  },
-  {
-    id: 'a1',
-    name: 'Admin',
-    email: 'admin@restez.com',
-    password: 'admin@restez123',
-    phone: '',
-    role: 'admin',
-    verified: true,
-  },
-]
+
 
 export async function POST(request: Request) {
   try {
@@ -62,21 +31,12 @@ export async function POST(request: Request) {
           user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role }
         })
       }
-      // user not found in DB → fall through to demo check
-    } catch (dbErr) {
-      console.warn('DB unavailable, falling back to demo accounts:', (dbErr as Error).message)
-    }
-
-    // ── Demo / local-dev fallback ────────────────────────────────────────────
-    const demoUser = DEMO_USERS.find(u => u.email === email)
-    if (!demoUser || demoUser.password !== password) {
+      // user not found in DB
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 })
+    } catch (dbErr) {
+      console.warn('DB error:', (dbErr as Error).message)
+      return NextResponse.json({ error: 'Login failed due to server error' }, { status: 500 })
     }
-
-    return NextResponse.json({
-      success: true,
-      user: { id: demoUser.id, name: demoUser.name, email: demoUser.email, phone: demoUser.phone, role: demoUser.role }
-    })
 
   } catch (error) {
     console.error('Login error:', error)

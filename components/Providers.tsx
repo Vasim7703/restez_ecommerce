@@ -12,6 +12,11 @@ export function Providers({ children }: { children: ReactNode }) {
     // Check session on mount
     checkSession()
 
+    // Periodically check session every minute
+    const intervalId = setInterval(() => {
+      checkSession()
+    }, 60000)
+
     // Activity tracker for standard user interactions
     const handleActivity = () => {
       updateLastActive()
@@ -39,6 +44,7 @@ export function Providers({ children }: { children: ReactNode }) {
       window.removeEventListener("scroll", throttledActivity)
       window.removeEventListener("click", throttledActivity)
       if (timeoutId) clearTimeout(timeoutId)
+      clearInterval(intervalId)
     }
   }, [checkSession, updateLastActive])
 
