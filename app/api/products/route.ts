@@ -56,6 +56,7 @@ export async function POST(request: Request) {
         images: JSON.stringify(body.images || { main: '' }),
         in_stock: body.in_stock !== false,
         featured: Boolean(body.featured),
+        warranty: body.warranty || '5-Year Warranty',
       },
     })
 

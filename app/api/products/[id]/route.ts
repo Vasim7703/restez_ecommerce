@@ -29,6 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         images: JSON.stringify(body.images || {}),
         in_stock: Boolean(body.in_stock),
         featured: Boolean(body.featured),
+        warranty: body.warranty || '5-Year Warranty',
       },
     })
 

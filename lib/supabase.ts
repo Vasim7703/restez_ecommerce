@@ -74,6 +74,7 @@ export interface Product {
   fabric_images: Record<string, string>
   in_stock: boolean
   featured: boolean
+  warranty?: string
   reviews?: Review[]
   created_at: string
   updated_at: string

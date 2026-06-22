@@ -48,6 +48,7 @@ model Product {
   images           String   // Stringified JSON: { main, front, angle_45... }
   in_stock         Boolean
   featured         Boolean
+  warranty         String   @default("5-Year Warranty")
   reviews          Review[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -100,5 +101,7 @@ model Order {
 model SiteConfig {
   key       String   @id
   value     String   // Stringified JSON
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_config")
 }

@@ -29,6 +29,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   }>({ checking: false })
   const [showFitGuide, setShowFitGuide] = useState(false)
   const [desktopMainImage, setDesktopMainImage] = useState('')
+  const [descExpanded, setDescExpanded] = useState(false)
 
   const { toggleWishlist, isInWishlist } = useWishlistStore()
   const { showToast } = useToast()
@@ -94,7 +95,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
     : 0
 
-  const allImages = [
+  const allImages = Array.from(new Set([
     product.images.main, 
     product.images.front, 
     product.images.angle_45, 
@@ -102,7 +103,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     product.images.back, 
     product.images.closeup,
     ...(product.images.lifestyle || [])
-  ].filter(Boolean)
+  ].filter(Boolean)))
 
   const handleCheckPincode = async () => {
     if (!validatePincode(pincode)) {
@@ -150,15 +151,15 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               className={`p-2.5 rounded-full shadow-md ${ inWishlist ? 'bg-red-50 text-red-500' : 'bg-white text-gray-500'}`}>
               <Heart className={`w-5 h-5 ${inWishlist ? 'fill-red-500' : ''}`} />
             </button>
-            <button className="p-2.5 bg-white rounded-full shadow-md text-gray-500">
+            <button onClick={() => navigator.share && navigator.share({ title: product.name, url: window.location.href }).catch(console.error)} className="p-2.5 bg-white rounded-full shadow-md text-gray-500">
               <Share2 className="w-5 h-5" />
             </button>
           </div>
         </div>
         {/* Thumbnail Strip */}
         <div className="flex space-x-2 px-3 py-2 overflow-x-auto scrollbar-hide">
-          {[product.images.main, product.images.front, product.images.angle_45, product.images.side, product.images.back, product.images.closeup].filter(Boolean).map((img, i) => (
-            <div key={i} className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200">
+          {allImages.map((img, i) => (
+            <div key={i} onClick={() => setDesktopMainImage(img)} className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer">
               <img src={img} alt={`view ${i+1}`} className="w-full h-full object-cover" />
             </div>
           ))}
@@ -190,19 +191,19 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           </div>
           <div className="mt-2 flex items-center space-x-2">
             <Shield className="w-4 h-4 text-emerald flex-shrink-0" />
-            <span className="text-sm font-montserrat text-gray-600">5-Year warranty · <span className="text-emerald font-semibold">{product.material}</span></span>
+            <span className="text-sm font-montserrat text-gray-600">{product.warranty || '5-Year Warranty'} · <span className="text-emerald font-semibold">{product.material}</span></span>
           </div>
         </div>
 
         {/* Mobile Delivery Check */}
         <div className="px-3 py-4 border-b border-gray-100">
           <p className="text-sm font-montserrat font-semibold text-charcoal mb-2">Check Delivery</p>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <input type="text" value={pincode} onChange={e => setPincode(e.target.value.replace(/\D/g,'').slice(0,6))}
               placeholder="Enter pincode" maxLength={6}
-              className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-emerald" />
+              className="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded-xl font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-emerald" />
             <button onClick={handleCheckPincode} disabled={pincodeStatus.checking}
-              className="px-4 py-2.5 bg-emerald text-white rounded-xl font-montserrat text-sm font-semibold disabled:opacity-50">Check</button>
+              className="flex-shrink-0 px-4 py-2.5 bg-emerald text-white rounded-xl font-montserrat text-sm font-semibold disabled:opacity-50">Check</button>
           </div>
           {pincodeStatus.serviceable !== undefined && (
             <p className={`mt-2 text-sm font-montserrat ${pincodeStatus.serviceable ? 'text-green-600' : 'text-red-500'}`}>
@@ -214,7 +215,14 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         {/* Mobile Description */}
         <div className="px-3 py-4 border-b border-gray-100">
           <p className="text-sm font-montserrat font-semibold text-charcoal mb-1">About this item</p>
-          <p className="text-sm font-montserrat text-gray-600 leading-relaxed">{product.description}</p>
+          <p className="text-sm font-montserrat text-gray-600 leading-relaxed">
+            {descExpanded || product.description.length <= 150 ? product.description : `${product.description.substring(0, 150)}...`}
+            {product.description.length > 150 && (
+              <button onClick={() => setDescExpanded(!descExpanded)} className="text-emerald font-semibold ml-1">
+                {descExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            )}
+          </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-montserrat">
             <div className="bg-gray-50 p-2 rounded-lg"><span className="text-gray-500">Seating</span><br/><span className="font-semibold">{product.seating_capacity} Seater</span></div>
             <div className="bg-gray-50 p-2 rounded-lg"><span className="text-gray-500">Size (L×W×H)</span><br/><span className="font-semibold">{product.dimensions.length}×{product.dimensions.width}×{product.dimensions.height} cm</span></div>
@@ -271,7 +279,12 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         </div>
 
         <p className="mt-4 text-lg text-gray-700 font-montserrat max-w-3xl">
-          {product.description}
+          {descExpanded || product.description.length <= 200 ? product.description : `${product.description.substring(0, 200)}...`}
+          {product.description.length > 200 && (
+            <button onClick={() => setDescExpanded(!descExpanded)} className="text-emerald font-semibold ml-2 text-sm">
+              {descExpanded ? 'Read Less' : 'Read More'}
+            </button>
+          )}
         </p>
       </div>
 
@@ -343,7 +356,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             <div className="flex items-center gap-4 text-sm font-montserrat text-gray-600">
               <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-emerald" /> Free Delivery</span>
               <span>•</span>
-              <span className="flex items-center gap-1.5"><Shield className="w-4 h-4 text-emerald" /> 5-Year Warranty</span>
+              <span className="flex items-center gap-1.5"><Shield className="w-4 h-4 text-emerald" /> {product.warranty || '5-Year Warranty'}</span>
             </div>
           </div>
         </div>
@@ -353,7 +366,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Pincode Check */}
-          <div className="bg-emerald/5 p-8 rounded-luxury border border-emerald/20">
+            <div className="hidden md:block bg-emerald/5 p-8 rounded-luxury border border-emerald/20">
             <h3 className="text-2xl font-playfair font-bold text-emerald mb-4">
               Check Delivery Availability
             </h3>
@@ -535,15 +548,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           <div className="flex items-center space-x-4 p-4 bg-white border border-gray-200 rounded-luxury">
             <Shield className="w-10 h-10 text-emerald flex-shrink-0" />
             <div>
-              <p className="font-montserrat font-semibold text-charcoal">5-Year Warranty</p>
+              <p className="font-montserrat font-semibold text-charcoal">{product.warranty || '5-Year Warranty'}</p>
               <p className="text-sm text-gray-600">Complete protection</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4 p-4 bg-white border border-gray-200 rounded-luxury">
-            <Star className="w-10 h-10 text-gold fill-gold flex-shrink-0" />
-            <div>
-              <p className="font-montserrat font-semibold text-charcoal">Premium Rated</p>
-              <p className="text-sm text-gray-600">4.9/5 customer satisfaction</p>
             </div>
           </div>
         </div>

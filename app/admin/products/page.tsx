@@ -12,7 +12,7 @@ const emptyForm = {
   seating_capacity: '3',
   dim_length: '', dim_width: '', dim_height: '',
   img_main: '', img_front: '', img_angle: '', img_side: '', img_back: '', img_closeup: '',
-  in_stock: true, featured: false,
+  in_stock: true, featured: false, warranty: '5-Year Warranty'
 }
 
 export default function AdminProductsPage() {
@@ -108,6 +108,7 @@ export default function AdminProductsPage() {
       img_closeup: product.images.closeup,
       in_stock: product.in_stock,
       featured: product.featured,
+      warranty: product.warranty || '5-Year Warranty',
     })
     setActiveTab('basic')
     setShowModal(true)
@@ -146,6 +147,7 @@ export default function AdminProductsPage() {
       },
       in_stock: form.in_stock,
       featured: form.featured,
+      warranty: form.warranty,
     }
 
     try {
@@ -430,6 +432,10 @@ export default function AdminProductsPage() {
                         <select value={form.seating_capacity} onChange={e => set('seating_capacity', e.target.value)} className={inputCls}>
                           {[1, 2, 3, 5, 6].map(n => <option key={n} value={n}>{n} Seater</option>)}
                         </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Warranty</label>
+                        <input value={form.warranty} onChange={e => set('warranty', e.target.value)} placeholder="5-Year Warranty" className={inputCls} />
                       </div>
                     </div>
 
