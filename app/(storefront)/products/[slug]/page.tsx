@@ -305,8 +305,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           
           {/* Right: Product Details & Actions */}
           <div className="pt-2">
-            <h2 className="text-2xl font-playfair font-bold text-charcoal mb-4">About this item</h2>
-            <p className="text-gray-700 font-montserrat leading-relaxed mb-8">{product.description}</p>
             
             <div className="grid grid-cols-2 gap-6 mb-10">
               <div className="bg-gray-50 p-5 rounded-luxury border border-gray-100">
