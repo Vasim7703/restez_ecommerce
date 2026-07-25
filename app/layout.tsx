@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: 'RESTEZ - Luxury Indian Sofas by Artech Furniture',
   description: 'Handcrafted luxury sofas blending traditional Indian artistry with contemporary design. Premium teak and sheesham wood furniture manufactured by Artech Furniture.',
   keywords: 'luxury sofas, Indian furniture, Artech Furniture, handcrafted sofas, teak wood, sheesham wood',
-  manifest: '/manifest.json',
 }
 
 export const viewport: Viewport = {

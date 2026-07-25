@@ -65,8 +65,7 @@ export default async function LabelPrintPage({
     }
   })
 
-  // Base URL for worker scanning
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 print:p-0 print:bg-white print:m-0">
@@ -150,19 +149,6 @@ export default async function LabelPrintPage({
                   </div>
                 </div>
 
-                {/* QR Code */}
-                <div className="flex flex-col items-center justify-center shrink-0">
-                  <QRCodeSVG 
-                    value={`${baseUrl}/worker/scan?orderId=${order.id}&item=${item.itemIndex}&piece=${item.pieceIndex}`} 
-                    size={110} 
-                    level="M" 
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="border-t border-black pt-1 mt-1 text-center">
-                 <p className="text-[10px] font-bold tracking-widest uppercase">SCAN TO UPDATE STATUS</p>
               </div>
 
             </div>
